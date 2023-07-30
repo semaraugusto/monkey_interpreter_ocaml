@@ -1,0 +1,4 @@
+(library
+ (public_name monkey)
+ (name monkey)
+ (libraries fmt stdio core stdlib))
