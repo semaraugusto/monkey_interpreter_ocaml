@@ -22,15 +22,28 @@ match (lst1,lst2) with
         (* print_string "t2: "; *)
         (* Token.print hh; *)
         let is_equal = Token.eq h hh in 
+        (* assert_equal true (Token.eq h hh); *)
+        (* cmp t tt *)
         if is_equal then
                 (* print_endline "YAY"; *)
                 cmp t tt
         else 
                 failwith "111";;
 
-let () = 
+let test_lexer () = 
         let _lexer = Lexer.init "=+(){},;" in
         let _tokens = Lexer.parse_input _lexer [] in 
         let is_equal = cmp _tokens _expected in
-        Printf.printf "is_equal: %b\n" is_equal;
-        print_endline "end!"
+        Alcotest.(check bool) "is_equal" true is_equal;;
+
+(* let test_lexer2 () =  *)
+(*         let _lexer = Lexer.init "=+(){},;" in *)
+(*         let _tokens = Lexer.parse_input _lexer [] in  *)
+(*         let is_equal = cmp _tokens _expected in *)
+(*         Alcotest.(check bool) "is_equal" true is_equal *)
+
+(* Run it *)
+let () =
+  Alcotest.run "Symbols parsing" [
+    "symbols-parsing", [ Alcotest.test_case "symbols parsing" `Quick test_lexer ];
+                ]
