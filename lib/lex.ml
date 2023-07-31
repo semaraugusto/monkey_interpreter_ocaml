@@ -62,15 +62,15 @@ module Lexer = struct
     print_endline ("number curr: \'" ^ (String.of_char curr) ^ "\'");
     print_endline ("number peek: \'" ^ (String.of_char p) ^ "\'");
     (* match (curr, p) with  *)
-    match curr with 
-    |'0' .. '9' -> 
+    match (curr, p) with 
+    |('0' .. '9'), ('0' .. '9') -> 
     (* |'0' .. '9', '0' .. '9' ->  *)
-      (if Char.equal p ';' then 
-        String.of_char_list (List.rev (curr :: output))
-      else begin
         read_char l;
-        read_number l (curr :: output)
-      end)
+        read_number l (curr :: output);
+    |('0' .. '9'), _ -> 
+      String.of_char_list (List.rev (curr :: output))
+    | _ ->
+      String.of_char_list (List.rev output);;
     (* | '0' .. '9', (';') ->  *)
         (* let out = String.of_char_list (List.rev (curr :: output)) in *)
         (* print_endline ("number out: " ^ out); *)
@@ -78,8 +78,6 @@ module Lexer = struct
     (* |'0' .. '9', (' ' | '\n') ->  *)
     (*   read_char l; *)
     (*   read_number l (curr :: output) *)
-      | _ ->
-      String.of_char_list (List.rev output);;
 
     (* (String.of_char l.ch);; *)
 
@@ -114,6 +112,11 @@ module Lexer = struct
         (match literal with 
           "fn" -> Token.newToken Token.Function literal
           | "let" -> Token.newToken Token.Let literal
+          | "if" -> Token.newToken Token.If literal
+          | "else" -> Token.newToken Token.Else literal
+          | "return" -> Token.newToken Token.Return literal
+          | "true" -> Token.newToken Token.True literal
+          | "false" -> Token.newToken Token.False literal
           | _ -> Token.newToken Token.Ident literal)
     |'0' .. '9' -> 
         let number = (read_number l []) in

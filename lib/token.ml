@@ -26,6 +26,12 @@ module Token = struct
     | RBrace
     (* Keywords *)
     | Function
+    | Return
+    | If
+    | Else
+    | True
+    | False
+
     | Let
 
 
@@ -64,7 +70,12 @@ module Token = struct
   | RBrace -> "RBRACE"
   (* keywords *)
   | Function -> "FUNCTION"
+  | If -> "IF"
+  | Else -> "ELSE"
+  | Return -> "RETURN"
   | Let -> "LET"
+  | True -> "TRUE"
+  | False -> "FALSE"
 
   let newToken t_type literal = {t_type = t_type; literal = literal}
 

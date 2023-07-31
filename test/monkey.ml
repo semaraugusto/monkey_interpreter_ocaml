@@ -250,7 +250,7 @@ if (5 < 10) {
 }`
 " in
         let tokens = Lexer.parse_input _lexer [] in 
-        let is_equal = cmp tokens expected_operators in
+        let is_equal = cmp tokens expected_conditionals in
         Alcotest.(check bool) "is_equal" true is_equal;;
 
 (* Run it *)
