@@ -10,6 +10,12 @@ module Token = struct
     (* Operators *)
     | Assign
     | Plus
+    | Minus
+    | Bang
+    | Slash
+    | Asterisk
+    | LT
+    | GT
 
     (* Delimiters *)
     | Comma
@@ -43,6 +49,12 @@ module Token = struct
   (* operators *)
   | Assign -> "ASSIGN"
   | Plus -> "PLUS"
+  | Minus -> "MINUS"
+  | Bang -> "BANG"
+  | Slash -> "SLASH"
+  | Asterisk -> "ASTERISK"
+  | LT -> "LESS THAN"
+  | GT -> "GREATER THAN"
   (* delimeters *)
   | Comma -> "COMMA"
   | Semicolon -> "SEMICOLON"

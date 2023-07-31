@@ -97,6 +97,12 @@ module Lexer = struct
       let token = match l.ch with
     | '=' -> Token.newToken Token.Assign (Char.to_string l.ch)
     | '+' -> Token.newToken Token.Plus (Char.to_string l.ch)
+    | '-' -> Token.newToken Token.Minus (Char.to_string l.ch)
+    | '!' -> Token.newToken Token.Bang (Char.to_string l.ch)
+    | '/' -> Token.newToken Token.Slash (Char.to_string l.ch)
+    | '*' -> Token.newToken Token.Asterisk (Char.to_string l.ch)
+    | '<' -> Token.newToken Token.LT (Char.to_string l.ch)
+    | '>' -> Token.newToken Token.GT (Char.to_string l.ch)
     | ',' -> Token.newToken Token.Comma (Char.to_string l.ch)
     | ';' -> Token.newToken Token.Semicolon (Char.to_string l.ch)
     | '(' -> Token.newToken Token.LParen (Char.to_string l.ch)
