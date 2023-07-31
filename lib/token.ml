@@ -16,6 +16,8 @@ module Token = struct
     | Asterisk
     | LT
     | GT
+    | Eq
+    | NotEq
 
     (* Delimiters *)
     | Comma
@@ -61,6 +63,8 @@ module Token = struct
   | Asterisk -> "ASTERISK"
   | LT -> "LESS THAN"
   | GT -> "GREATER THAN"
+  | Eq -> "EQUALS"
+  | NotEq -> "NOT EQUALS"
   (* delimeters *)
   | Comma -> "COMMA"
   | Semicolon -> "SEMICOLON"

@@ -172,6 +172,84 @@ let expected_conditionals: Token.token list = [
         {Token.t_type = Token.EOF; Token.literal = ""};
 ];;
 
+let expected_comparators: Token.token list = [
+        {Token.t_type = Token.Let; Token.literal = "let"};
+        {Token.t_type = Token.Ident; Token.literal = "five"};
+        {Token.t_type = Token.Assign; Token.literal = "="};
+        {Token.t_type = Token.Int; Token.literal = "5"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.Let; Token.literal = "let"};
+        {Token.t_type = Token.Ident; Token.literal = "ten"};
+        {Token.t_type = Token.Assign; Token.literal = "="};
+        {Token.t_type = Token.Int; Token.literal = "10"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.Let; Token.literal = "let"};
+        {Token.t_type = Token.Ident; Token.literal = "add"};
+        {Token.t_type = Token.Assign; Token.literal = "="};
+        {Token.t_type = Token.Function; Token.literal = "fn"};
+        {Token.t_type = Token.LParen; Token.literal = "("};
+        {Token.t_type = Token.Ident; Token.literal = "x"};
+        {Token.t_type = Token.Comma; Token.literal = ","};
+        {Token.t_type = Token.Ident; Token.literal = "y"};
+        {Token.t_type = Token.RParen; Token.literal = ")"};
+        {Token.t_type = Token.LBrace; Token.literal = "{"};
+        {Token.t_type = Token.Ident; Token.literal = "x"};
+        {Token.t_type = Token.Plus; Token.literal = "+"};
+        {Token.t_type = Token.Ident; Token.literal = "y"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.RBrace; Token.literal = "}"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.Let; Token.literal = "let"};
+        {Token.t_type = Token.Ident; Token.literal = "result"};
+        {Token.t_type = Token.Assign; Token.literal = "="};
+        {Token.t_type = Token.Ident; Token.literal = "add"};
+        {Token.t_type = Token.LParen; Token.literal = "("};
+        {Token.t_type = Token.Ident; Token.literal = "five"};
+        {Token.t_type = Token.Comma; Token.literal = ","};
+        {Token.t_type = Token.Ident; Token.literal = "ten"};
+        {Token.t_type = Token.RParen; Token.literal = ")"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.Bang; Token.literal = "!"};
+        {Token.t_type = Token.Minus; Token.literal = "-"};
+        {Token.t_type = Token.Slash; Token.literal = "/"};
+        {Token.t_type = Token.Asterisk; Token.literal = "*"};
+        {Token.t_type = Token.Int; Token.literal = "5"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.Int; Token.literal = "5"};
+        {Token.t_type = Token.LT; Token.literal = "<"};
+        {Token.t_type = Token.Int; Token.literal = "10"};
+        {Token.t_type = Token.GT; Token.literal = ">"};
+        {Token.t_type = Token.Int; Token.literal = "5"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.If; Token.literal = "if"};
+        {Token.t_type = Token.LParen; Token.literal = "("};
+        {Token.t_type = Token.Int; Token.literal = "5"};
+        {Token.t_type = Token.LT; Token.literal = "<"};
+        {Token.t_type = Token.Int; Token.literal = "10"};
+        {Token.t_type = Token.RParen; Token.literal = ")"};
+        {Token.t_type = Token.LBrace; Token.literal = "{"};
+        {Token.t_type = Token.Return; Token.literal = "return"};
+        {Token.t_type = Token.True; Token.literal = "true"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.RBrace; Token.literal = "}"};
+        {Token.t_type = Token.Else; Token.literal = "else"};
+        {Token.t_type = Token.LBrace; Token.literal = "{"};
+        {Token.t_type = Token.Return; Token.literal = "return"};
+        {Token.t_type = Token.False; Token.literal = "false"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.RBrace; Token.literal = "}"};
+        {Token.t_type = Token.Int; Token.literal = "10"};
+        {Token.t_type = Token.Eq; Token.literal = "=="};
+        {Token.t_type = Token.Int; Token.literal = "10"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+        {Token.t_type = Token.Int; Token.literal = "10"};
+        {Token.t_type = Token.NotEq; Token.literal = "!="};
+        {Token.t_type = Token.Int; Token.literal = "9"};
+        {Token.t_type = Token.Semicolon; Token.literal = ";"};
+
+        {Token.t_type = Token.EOF; Token.literal = ""};
+];;
+
 let rec cmp lst1 lst2 =
 match (lst1,lst2) with
 | [], [] -> true
@@ -247,10 +325,35 @@ if (5 < 10) {
     return true;
 } else {
     return false;
-}`
+}
 " in
         let tokens = Lexer.parse_input _lexer [] in 
         let is_equal = cmp tokens expected_conditionals in
+        Alcotest.(check bool) "is_equal" true is_equal;;
+
+let test_comparators () = 
+        let _lexer = Lexer.init "let five = 5;
+let ten = 10;
+
+let add = fn(x, y) {
+  x + y;
+};
+
+let result = add(five, ten);
+!-/*5;
+5 < 10 > 5;
+
+if (5 < 10) {
+    return true;
+} else {
+    return false;
+}
+
+10 == 10;
+10 != 9;
+" in
+        let tokens = Lexer.parse_input _lexer [] in 
+        let is_equal = cmp tokens expected_comparators in
         Alcotest.(check bool) "is_equal" true is_equal;;
 
 (* Run it *)
@@ -261,5 +364,6 @@ let () =
                         Alcotest.test_case "simple parsing" `Quick test_simple ;
                         Alcotest.test_case "operator parsing" `Quick test_operators ;
                         Alcotest.test_case "conditional parsing" `Quick test_conditionals ;
+                        Alcotest.test_case "comparators parsing" `Quick test_comparators ;
     ];
   ]

@@ -93,10 +93,22 @@ module Lexer = struct
       skip_whitespace l;
       let _old_ch = l.ch in
       let token = match l.ch with
-    | '=' -> Token.newToken Token.Assign (Char.to_string l.ch)
+    | '=' -> 
+        (match peek l with
+          | '=' -> 
+            read_char l; 
+            Token.newToken Token.Eq "=="
+          | _ -> Token.newToken Token.Assign (Char.to_string l.ch))
+        (* Token.newToken Token.Assign (Char.to_string l.ch) *)
     | '+' -> Token.newToken Token.Plus (Char.to_string l.ch)
     | '-' -> Token.newToken Token.Minus (Char.to_string l.ch)
-    | '!' -> Token.newToken Token.Bang (Char.to_string l.ch)
+    | '!' -> 
+        (match peek l with
+          | '=' -> 
+            read_char l; 
+            Token.newToken Token.NotEq "!="
+          | _ -> Token.newToken Token.Bang ("!"))
+        (* Token.newToken Token.Bang (Char.to_string l.ch) *)
     | '/' -> Token.newToken Token.Slash (Char.to_string l.ch)
     | '*' -> Token.newToken Token.Asterisk (Char.to_string l.ch)
     | '<' -> Token.newToken Token.LT (Char.to_string l.ch)
