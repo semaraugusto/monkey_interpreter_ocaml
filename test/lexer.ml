@@ -257,24 +257,12 @@ match (lst1,lst2) with
 | [],_ -> false
 | _,[] -> false
 | (h :: t), (hh:: tt) -> 
-        Out_channel.output_string stdout "T1: ";
-        Token.print h;
-        Out_channel.output_string stdout "T2: ";
-        Token.print hh;
-        Out_channel.output_string stdout "\n";
         let is_equal = Token.eq h hh in 
         if is_equal then
                 cmp t tt
-        else begin
-                        (* Out_channel.output_string stdout "T1: "; *)
-                        (* Token.print h; *)
-                        (* Out_channel.output_string stdout "T2: "; *)
-                        (* Token.print hh; *)
-                        (* Out_channel.output_string stderr "\n"; *)
-                                (* " not equal T2: " ^ Token.print hh); *)
-                        (* Out_channel.output_string stderr ("T1: " ^ Token.print h ^ " not equal T2: " ^ Token.print hh); *)
-                false
-                        end
+        else
+          let error = Printf.sprintf "\n%s\n  is not equal to \n%s" (Token.string_of h) (Token.string_of hh) in 
+          failwith error
 
 let test_symbols () = 
         let _lexer = Lexer.init "=+(){},;" in

@@ -1,4 +1,5 @@
 open Core
+
 include Token
 
 module Lexer = struct 
@@ -115,18 +116,15 @@ module Lexer = struct
           | _ -> Token.newToken Token.Ident literal)
     |'0' .. '9' -> 
         let number = (read_number l []) in
-        print_endline ("number: " ^ number);
         
         Token.newToken Token.Int number
 
     | ' ' | '\n' -> 
         failwith "space"
-    | ch -> 
-        Printf.printf "ch: \'%c\'\n" ch;
+    | _ -> 
         Token.newToken Token.EOF "" in
 
-    print_string ("char: " ^ (String.of_char l.ch) ^ " -> ");
-    Token.print token; 
+    (* Token.print token;  *)
     read_char l;
     token;;
 

@@ -1,3 +1,4 @@
+
 module Token = struct
   type t_type = 
     | Illegal
@@ -42,6 +43,28 @@ module Token = struct
     t_type: t_type;
   }
   [@@deriving show]
+
+  let prefixPrecedence = 7
+  let lowest = 1
+
+  let precedence (tok : t_type) = match tok with
+  | Eq
+  | NotEq -> 2
+  | LT
+  | GT -> 3
+  | Plus
+  | Minus -> 4
+  | Slash
+  | Asterisk -> 5
+  | LParen -> 6
+  | LBrace -> 8
+  | _ -> lowest
+
+  let compare (a : t_type) (b : t_type) =
+    let a_prec = precedence a in
+    let b_prec = precedence b in
+    compare a_prec b_prec
+
 
 
 (* let END : token = { *)

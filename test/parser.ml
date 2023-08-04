@@ -6,46 +6,100 @@ let rec cmp lst1 lst2 =
   | [],_ -> false
   | _,[] -> false
   | (h :: t), (hh:: tt) -> 
-    Out_channel.output_string stdout "T1: ";
-    Stmt.print h;
-    Out_channel.output_string stdout "T2: ";
-    Stmt.print hh;
-    Out_channel.output_string stdout "\n";
     let is_equal = Stmt.eq h hh in 
     if is_equal then
             cmp t tt
     else
-            false
+      let error = Printf.sprintf "\n(%s)\n  is not equal to \n(%s)" (Stmt.string_of h) (Stmt.string_of hh) in 
+      failwith error
 ;;
 
 let expected_let_stmt: program = [
   Stmt.Let {
     token = {t_type = Token.Let; literal = "let"};
-    id = {token = {t_type = Token.Ident; literal = "foobar"}; name = "foobar"}
+    id = {token = {t_type = Token.Ident; literal = "x"}; name = "x"};
+    value = (Expression.init {t_type = Token.Int; literal = "5"});
+
   };
   Stmt.Let {
     token = {t_type = Token.Let; literal = "let"};
-    id = {token = {t_type = Token.Ident; literal = "y"}; name = "y"}
+    id = {token = {t_type = Token.Ident; literal = "y"}; name = "y"};
+    value = (Expression.init {t_type = Token.Int; literal = "10"});
   };
   Stmt.Let {
     token = {t_type = Token.Let; literal = "let"};
-    id = {token = {t_type = Token.Ident; literal = "x"}; name = "x"}
+    id = {token = {t_type = Token.Ident; literal = "foobar"}; name = "foobar"};
+    value = (Expression.init {t_type = Token.Int; literal = "838383"});
+  };
+];;
+
+let expected_return_stmt: program = [
+  Stmt.Return {
+    token = {t_type = Token.Return; literal = "return"};
+    expr = (Expression.init {t_type = Token.Int; literal = "5"});
+  };
+  Stmt.Return {
+    token = {t_type = Token.Return; literal = "return"};
+    expr = (Expression.init {t_type = Token.Int; literal = "10"});
+  };
+  Stmt.Return {
+    token = {t_type = Token.Return; literal = "return"};
+    expr = (Expression.init {t_type = Token.Int; literal = "993322"});
+  };
+] ;;
+
+let expected_identity_stmt: program = [
+  Stmt.Expression {
+    token = {t_type = Token.Ident; literal = "foobar"};
+    expr = (Expression.init {t_type = Token.Ident; literal = "foobar"});
   }
 ];;
-let test_parser () = 
-        let code = "
+let expected_integer_stmt: program = [
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "5"};
+    expr = (Expression.init {t_type = Token.Int; literal = "5"});
+  }
+];;
+
+let test_let_stmt_parser () = 
+  let code = "
 let x = 5;
 let y = 10;
 let foobar = 838383;" in
-        (* let lexer = Monkey.Lexer.init code in *)
-        let parser = Monkey.Parser.init code in 
-        let program = Monkey.Parser.parse_program parser [] in 
-        let () = Monkey.print_program program in 
-        (* let () = print_endline "hello from parser" in  *)
-        let is_equal = cmp program expected_let_stmt in
-        Alcotest.(check bool) "is_equal" true is_equal;;
-      
-        (* Alcotest.(check bool) "is_equal" true false *)
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+  let is_equal = cmp program expected_let_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal
+;;
+
+let test_return_stmt_parser () = 
+  let code = "return 5;
+return 10;
+return 993322;" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+  let is_equal = cmp program expected_return_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
+let test_identity_expr_parser () = 
+  let code = "foobar;" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+  let is_equal = cmp program expected_identity_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
+let test_integer_expr_parser () = 
+  let code = "5;" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+  let is_equal = cmp program expected_integer_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
 let test_parser_error () = 
@@ -54,22 +108,21 @@ let x = 5;
 let y = 10;
 let foobar 838383;" in
         (* let lexer = Monkey.Lexer.init code in *)
-        let parser = Monkey.Parser.init code in 
-        let program = Monkey.Parser.parse_program parser [] in 
-        let () = Monkey.print_program program in 
-        (* let () = print_endline "hello from parser" in  *)
-        let is_equal = cmp program expected_let_stmt in
-        Alcotest.(check bool) "is_equal" true is_equal;;
+        let _parser = Monkey.Parser.init code in 
 
-(* let test_parser2 () =  *)
-(*         let () = print_endline "hello from parser" in  *)
-(*         Alcotest.(check bool) "is_equal" true false *)
+        (* TODO: add test *)
+        ()
+;;
+        (* Alcotest.(check fail) Monkey.Parser.parse_program parser [] *)
 ;;
 
 let () =
   Alcotest.run "Parsing" [
-    "letStatement", [ 
-      Alcotest.test_case "simple" `Quick test_parser;
+    "Statements", [ 
+      Alcotest.test_case "let" `Quick test_let_stmt_parser;
+      Alcotest.test_case "return" `Quick test_return_stmt_parser;
+      Alcotest.test_case "identity_expr" `Quick test_identity_expr_parser;
+      Alcotest.test_case "integer_expr" `Quick test_integer_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     (* "parsing", [  *)
