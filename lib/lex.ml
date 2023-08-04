@@ -2,26 +2,28 @@ open Core
 include Token
 
 module Lexer = struct 
-  type lex = {
+  type t = {
     input : string;
     mutable pos : int;
     mutable read_pos : int;
     mutable ch : char;
   }
+  [@@deriving show]
+
+  let to_string l = l.input ^ "at: (pos: " ^ (string_of_int l.pos) ^ ", read_pos: " ^ (string_of_int l.read_pos) ^ ", ch: " ^ String.of_char l.ch
+
+  let pp ppf l = 
+    Format.fprintf ppf "%s\n at: (pos: %d, read_pos: %d, ch: %c" l.input l.pos l.read_pos l.ch
+  ;;
   
   let read_char l = 
-    print_endline ("old: \'" ^ (String.of_char l.ch) ^ "\'");
     if l.read_pos >= String.length l.input then
       l.ch <- '\000'
     else
       l.ch <- l.input.[l.read_pos];
 
-    print_endline ("new: \'" ^ (String.of_char l.ch) ^ "\'");
-
-    (* Out_channel.output_char stdout l.ch; *)
     l.pos <- l.read_pos;
     l.read_pos <- l.read_pos + 1;;
-    (* l;; *)
 
   let init input =
     let l = {
@@ -42,15 +44,11 @@ module Lexer = struct
   let rec read_identifier l output = 
     let curr = l.ch in
     let p = peek l in
-    print_endline ("identifier curr: \'" ^ (String.of_char curr) ^ "\'");
-    print_endline ("identifier peek: \'" ^ (String.of_char p) ^ "\'");
     
     match (curr, p) with 
     |('a' .. 'z' | 'A' .. 'Z'), ('a' .. 'z' | 'A' .. 'Z') -> 
       read_char l;
       read_identifier l (curr :: output)
-    (* |('a' .. 'z' | 'A' .. 'Z'), ('(', ) ->  *)
-      (* String.of_char_list (List.rev (curr :: output));; *)
     |('a' .. 'z' | 'A' .. 'Z'), _ -> 
       String.of_char_list (List.rev (curr :: output))
     | _ ->
@@ -59,27 +57,15 @@ module Lexer = struct
   let rec read_number l output = 
     let curr = l.ch in
     let p = peek l in
-    print_endline ("number curr: \'" ^ (String.of_char curr) ^ "\'");
-    print_endline ("number peek: \'" ^ (String.of_char p) ^ "\'");
-    (* match (curr, p) with  *)
+
     match (curr, p) with 
     |('0' .. '9'), ('0' .. '9') -> 
-    (* |'0' .. '9', '0' .. '9' ->  *)
         read_char l;
         read_number l (curr :: output);
     |('0' .. '9'), _ -> 
       String.of_char_list (List.rev (curr :: output))
     | _ ->
       String.of_char_list (List.rev output);;
-    (* | '0' .. '9', (';') ->  *)
-        (* let out = String.of_char_list (List.rev (curr :: output)) in *)
-        (* print_endline ("number out: " ^ out); *)
-        (* out  *)
-    (* |'0' .. '9', (' ' | '\n') ->  *)
-    (*   read_char l; *)
-    (*   read_number l (curr :: output) *)
-
-    (* (String.of_char l.ch);; *)
 
   let rec skip_whitespace l = 
     match l.ch with 
@@ -91,7 +77,6 @@ module Lexer = struct
 
   let next_token l = 
       skip_whitespace l;
-      let _old_ch = l.ch in
       let token = match l.ch with
     | '=' -> 
         (match peek l with
@@ -99,7 +84,6 @@ module Lexer = struct
             read_char l; 
             Token.newToken Token.Eq "=="
           | _ -> Token.newToken Token.Assign (Char.to_string l.ch))
-        (* Token.newToken Token.Assign (Char.to_string l.ch) *)
     | '+' -> Token.newToken Token.Plus (Char.to_string l.ch)
     | '-' -> Token.newToken Token.Minus (Char.to_string l.ch)
     | '!' -> 
@@ -108,7 +92,6 @@ module Lexer = struct
             read_char l; 
             Token.newToken Token.NotEq "!="
           | _ -> Token.newToken Token.Bang ("!"))
-        (* Token.newToken Token.Bang (Char.to_string l.ch) *)
     | '/' -> Token.newToken Token.Slash (Char.to_string l.ch)
     | '*' -> Token.newToken Token.Asterisk (Char.to_string l.ch)
     | '<' -> Token.newToken Token.LT (Char.to_string l.ch)
@@ -138,20 +121,13 @@ module Lexer = struct
 
     | ' ' | '\n' -> 
         failwith "space"
-      (* let _ = print_endline "space" in *)
-      (* read_char l; *)
-      (* next_token l; *)
     | ch -> 
         Printf.printf "ch: \'%c\'\n" ch;
         Token.newToken Token.EOF "" in
 
     print_string ("char: " ^ (String.of_char l.ch) ^ " -> ");
     Token.print token; 
-    (* if (Char.equal old_ch l.ch) then *)
-      read_char l;
-    (* if not (Char.equal l.ch ';') then *)
-    (* print_string "next_token: "; *)
-    (* Token.print token; *)
+    read_char l;
     token;;
 
   let rec parse_input lexer result = 

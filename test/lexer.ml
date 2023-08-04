@@ -1,5 +1,6 @@
 open Monkey
-let expected_symbols: Token.token list = [
+
+let expected_symbols: Token.t list = [
         {Token.t_type = Token.Assign; Token.literal = "="};
         {Token.t_type = Token.Plus; Token.literal = "+"};
         {Token.t_type = Token.LParen; Token.literal = "("};
@@ -11,7 +12,7 @@ let expected_symbols: Token.token list = [
         {Token.t_type = Token.EOF; Token.literal = ""};
 ];;
 
-let expected_simple: Token.token list = [
+let expected_simple: Token.t list = [
         {Token.t_type = Token.Let; Token.literal = "let"};
         {Token.t_type = Token.Ident; Token.literal = "five"};
         {Token.t_type = Token.Assign; Token.literal = "="};
@@ -51,7 +52,7 @@ let expected_simple: Token.token list = [
         {Token.t_type = Token.EOF; Token.literal = ""};
 ];;
 
-let expected_operators: Token.token list = [
+let expected_operators: Token.t list = [
         {Token.t_type = Token.Let; Token.literal = "let"};
         {Token.t_type = Token.Ident; Token.literal = "five"};
         {Token.t_type = Token.Assign; Token.literal = "="};
@@ -103,7 +104,7 @@ let expected_operators: Token.token list = [
         {Token.t_type = Token.EOF; Token.literal = ""};
 ];;
 
-let expected_conditionals: Token.token list = [
+let expected_conditionals: Token.t list = [
         {Token.t_type = Token.Let; Token.literal = "let"};
         {Token.t_type = Token.Ident; Token.literal = "five"};
         {Token.t_type = Token.Assign; Token.literal = "="};
@@ -172,7 +173,7 @@ let expected_conditionals: Token.token list = [
         {Token.t_type = Token.EOF; Token.literal = ""};
 ];;
 
-let expected_comparators: Token.token list = [
+let expected_comparators: Token.t list = [
         {Token.t_type = Token.Let; Token.literal = "let"};
         {Token.t_type = Token.Ident; Token.literal = "five"};
         {Token.t_type = Token.Assign; Token.literal = "="};
@@ -332,7 +333,7 @@ if (5 < 10) {
         Alcotest.(check bool) "is_equal" true is_equal;;
 
 let test_comparators () = 
-        let _lexer = Lexer.init "let five = 5;
+        let lexer = Lexer.init "let five = 5;
 let ten = 10;
 
 let add = fn(x, y) {
@@ -352,18 +353,18 @@ if (5 < 10) {
 10 == 10;
 10 != 9;
 " in
-        let tokens = Lexer.parse_input _lexer [] in 
+        let tokens = Lexer.parse_input lexer [] in 
         let is_equal = cmp tokens expected_comparators in
         Alcotest.(check bool) "is_equal" true is_equal;;
 
 (* Run it *)
 let () =
-  Alcotest.run "Symbols parsing" [
-    "symbols-parsing", [ Alcotest.test_case "symbols parsing" `Quick test_symbols ];
-    "parsing", [ 
-                        Alcotest.test_case "simple parsing" `Quick test_simple ;
-                        Alcotest.test_case "operator parsing" `Quick test_operators ;
-                        Alcotest.test_case "conditional parsing" `Quick test_conditionals ;
-                        Alcotest.test_case "comparators parsing" `Quick test_comparators ;
+  Alcotest.run "Lexing" [
+    "symbols", [ Alcotest.test_case "lexing" `Quick test_symbols ];
+    "lexing", [ 
+                        Alcotest.test_case "simple" `Quick test_simple ;
+                        Alcotest.test_case "operator" `Quick test_operators ;
+                        Alcotest.test_case "conditional" `Quick test_conditionals ;
+                        Alcotest.test_case "comparators" `Quick test_comparators ;
     ];
   ]

@@ -35,12 +35,13 @@ module Token = struct
     | False
 
     | Let
+  [@@deriving show]
 
-
-  type token = {
+  type t = {
     literal: string;
     t_type: t_type;
   }
+  [@@deriving show]
 
 
 (* let END : token = { *)
@@ -81,6 +82,8 @@ module Token = struct
   | True -> "TRUE"
   | False -> "FALSE"
 
+  let eof = {t_type = EOF; literal = ""}
+
   let newToken t_type literal = {t_type = t_type; literal = literal}
 
   let eq a b = a.literal = b.literal && a.t_type = b.t_type
@@ -90,5 +93,9 @@ module Token = struct
   let print tk = 
         let t = tokenToString tk in
         Printf.printf "Token: %s - Literal: \'%s\'\n" t tk.literal
+
+  let string_of tk = 
+    Printf.sprintf "Token: %s, Literal: \'%s\'" (tokenToString tk) tk.literal
+
   let test str = print_endline str
 end
