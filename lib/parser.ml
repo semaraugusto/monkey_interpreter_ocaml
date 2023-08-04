@@ -115,34 +115,18 @@ module Parser = struct
   let parse_let_stmt parser = 
     let stmt_token = parser.cur_token in 
 
-    print_endline ("stmt_token: " ^ Token.string_of parser.cur_token);
-
     let parser = next_token_if parser Token.Ident in
 
     let id = Ast.Identifier.of_token parser.cur_token in 
 
-    print_endline ("ident_token: " ^ Token.string_of parser.cur_token);
-
     let parser = next_token_if parser Token.Assign in
 
-    print_endline ("assign_token: " ^ Token.string_of parser.cur_token);
-
+    (* Ignore assign token *)
     let parser = next_token parser in
 
-    print_endline ("expr_token: " ^ Token.string_of parser.cur_token);
-
-    (* TODO: Add expression parsing *)
-    (* let expr = Expression.init parser.cur_token in *)
     let (parser, expr) = parse_expr parser in
 
-    (* print_endline ("expr: " ^ Ast.Expression.string_of expr); *)
-    print_endline ("semicolon_token: " ^ Token.string_of parser.cur_token);
-    print_endline ("expr: " ^ Expression.string_of expr);
-
     let stmt = Ast.Stmt.init stmt_token id expr in
-    
-    print_endline ("stmt: " ^ Stmt.string_of stmt);
-    print_endline ("???: " ^ Token.string_of stmt_token);
     let parser = next_token_if parser Token.Semicolon in
 
     (parser, stmt)

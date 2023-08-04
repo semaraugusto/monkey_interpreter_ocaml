@@ -18,7 +18,9 @@ module Identifier = struct
         (Token.eq a_token b_token) && (a_name = b_name)
   ;;
 
-  let string_of id = 
+  let string_of id = id.name;;
+
+  let string_of_complete id = 
     Printf.sprintf "Identifier: {Token: (%s) Name: %s}" (Token.string_of id.token) id.name
   ;;
   let print stmt = 
@@ -134,7 +136,7 @@ module LetStmt = struct
   ;;
 
   let string_of (stmt : t) = 
-    Printf.sprintf "LetStmt: %s %s = (%s);" stmt.token.literal stmt.id.token.literal (Expression.string_of stmt.value)
+    Printf.sprintf "%s %s = %s;" stmt.token.literal stmt.id.token.literal (Expression.string_of stmt.value)
   ;;
 
   let eq (a : t) (b : t) = 

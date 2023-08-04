@@ -73,6 +73,19 @@ let foobar = 838383;" in
   Alcotest.(check bool) "is_equal" true is_equal
 ;;
 
+let test_let_stmt_string_of  () = 
+  let program = [
+    Stmt.Let {
+      token = {t_type = Token.Let; literal = "let"};
+      id = {token = {t_type = Token.Ident; literal = "myvar"}; name = "myvar"};
+      value = (Expression.init {t_type = Token.Ident; literal = "anotherVar"});
+    }
+  ] in
+  let expected = "let myvar = anotherVar;" in
+  let actual = Stmt.string_of (List.hd program) in
+  Alcotest.(check string) "is_equal" expected actual
+;;
+
 let test_return_stmt_parser () = 
   let code = "return 5;
 return 10;
@@ -124,6 +137,9 @@ let () =
       Alcotest.test_case "identity_expr" `Quick test_identity_expr_parser;
       Alcotest.test_case "integer_expr" `Quick test_integer_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
+    ];
+    "String conversion", [ 
+      Alcotest.test_case "let" `Quick test_let_stmt_string_of;
     ];
     (* "parsing", [  *)
     (*                     Alcotest.test_case "simple parsing" `Quick test_parser2 ; *)
