@@ -1,5 +1,6 @@
 include Token
 include Lex
+include Ast
 include Parser
 let test str = print_endline str
 

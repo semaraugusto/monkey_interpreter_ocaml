@@ -53,25 +53,83 @@ module Integer = struct
   ;;
 end
 
-module Expression = struct 
+module rec Prefix : sig
+  type t = {
+    token : Token.t;
+    operator : string;
+    right : Expression.t;
+  }
+  val init : Token.t -> Expression.t -> t
+  val string_of : t -> string
+  val eq : t -> t -> bool
+end = struct 
+  type t = {
+    token : Token.t;
+    operator : string;
+    right : Expression.t;
+  }
+
+  let init token expr = 
+    {token; operator = token.literal; right = expr}
+
+  let eq a b = 
+    let is_token_eq = Token.eq a.token b.token in
+    Printf.printf "token: %s == %s: %b" (Token.string_of a.token) (Token.string_of b.token) is_token_eq;
+    let is_operator_eq = a.operator = b.operator in
+    Printf.printf "operator: %s == %s: %b" a.operator b.operator is_operator_eq;
+    let is_right_eq = Expression.eq a.right b.right in
+    Printf.printf "right: %s == %s: %b" (Expression.string_of a.right) (Expression.string_of b.right) is_right_eq;
+
+    is_token_eq && is_operator_eq && is_right_eq
+  ;;
+
+  let string_of expr = 
+    Printf.sprintf "(%s %s %s)" (Token.string_of expr.token) expr.operator (Expression.string_of expr.right)
+  ;;
+end
+and Expression : sig
   type t = 
     | Identifier of Identifier.t
     | Integer of Integer.t
-    | Unknown
+    | Prefix of Prefix.t
+  [@@deriving show]
+
+    val init : Token.t -> t
+    val init_integer : Token.t -> t
+    val eq : t -> t -> bool
+    val string_of : t -> string
+    val rec_init : Token.t -> t -> t;;
+end = struct 
+  type t = 
+    | Identifier of Identifier.t
+    | Integer of Integer.t
+    | Prefix of Prefix.t
   [@@deriving show]
 
   let init (token : Token.t) = 
     match token.t_type with 
       | Token.Ident -> Identifier (Identifier.of_token token)
       | Token.Int -> Integer (Integer.of_token token)
-      | _ -> Unknown
+      | Token.Bang -> failwith "Should not be here"
+      | Token.Minus -> failwith "Should not be here"
+      | _ -> failwith "cannot init Stmt from unknown token type"
+    (* Identifier (Identifier.of_token id) *)
+  ;;
+
+  let rec_init (token : Token.t) (expr: t) : t  = 
+    match token.t_type with 
+      | Token.Ident -> Identifier (Identifier.of_token token)
+      | Token.Int -> Integer (Integer.of_token token)
+      | Token.Bang -> Prefix (Prefix.init token expr)
+      | Token.Minus -> Prefix (Prefix.init token expr)
+      | _ -> failwith "cannot init Stmt from unknown token type"
     (* Identifier (Identifier.of_token id) *)
   ;;
 
   let string_of expr = match expr with
-    | Identifier id -> Identifier.string_of id
-    | Integer i -> Integer.string_of i
-    | Unknown -> "Unknown"
+    | Identifier expr -> "Expression.Identifier: " ^ Identifier.string_of expr
+    | Integer expr -> "Expression.Integer: " ^ Integer.string_of expr
+    | Prefix expr -> "Expression.Prefix: " ^ Prefix.string_of expr
   ;;
 
   let init_integer i = 
@@ -83,12 +141,10 @@ module Expression = struct
     match (a, b) with 
       | (Identifier a, Identifier b) -> Identifier.eq a b
       | (Integer a, Integer b) -> Integer.eq a b
-      | (Unknown, Unknown) -> true
+      | (Prefix a, Prefix b) -> Prefix.eq a b
       | _ -> false
     (* a = b *)
   ;;
-
-
 end
 
 module ExpressionStmt = struct
@@ -109,7 +165,7 @@ module ExpressionStmt = struct
     | ({token = a_token; expr = a_expr}, {token = b_token; expr = b_expr}) -> 
       (Token.eq a_token b_token) && (Expression.eq a_expr b_expr)
   ;;
-  let string_of stmt = 
+  let string_of (stmt : t) = 
     Printf.sprintf "ExpressionStmt: {(%s) (%s)}" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
   ;;
 
@@ -207,32 +263,37 @@ module Stmt = struct
     | Expression stmt -> ExpressionStmt.string_of stmt
   ;;
 
-  let init (stmt_token : Token.t) (id : Identifier.t) (expr : Expression.t) = 
-    match (stmt_token.t_type, expr) with
-    | (Token.Let, expr) -> (
-      match expr with 
-        | Expression.Identifier _ -> Let (LetStmt.init stmt_token id expr)
-        | Expression.Integer _ -> Let (LetStmt.init stmt_token id expr)
-        (* | Expression.Unknown -> Let (LetStmt.init stmt_token id Expression.Unknown) *)
-        | Expression.Unknown -> failwith "Cannot initiate let statement with unknown expression"
-    )
+  (* let init (stmt_token : Token.t) (id : Identifier.t) (expr : Expression.t) =  *)
+  (*   match (stmt_token.t_type, expr) with *)
+  (*   | (Token.Let, expr) -> ( *)
+  (*     match expr with  *)
+  (*       | _ -> Let (LetStmt.init stmt_token id expr) *)
+  (*   ) *)
+  (**)
+  (*   | (Token.Return, expr) -> ( *)
+  (*     match expr with  *)
+  (*       | _ -> Return (ReturnStmt.init stmt_token expr) *)
+  (*   ) *)
+  (*   | _ -> failwith "invalid stmt type" *)
+  (* ;; *)
+  let init (stmt_token : Token.t) (aux_token : Token.t) (expr : Expression.t) = 
+    
+    match (stmt_token.t_type) with
+    | (Token.Let) -> 
+        let id = Identifier.of_token aux_token in 
+        Let (LetStmt.init stmt_token id expr)
 
-    | (Token.Return, expr) -> (
-      match expr with 
-        | Expression.Identifier _ -> Return (ReturnStmt.init stmt_token expr)
-        | Expression.Integer _ -> Return (ReturnStmt.init stmt_token expr)
-        (* | Expression.Unknown -> Return (ReturnStmt.init stmt_token Expression.Unknown) *)
-        | Expression.Unknown -> failwith "Cannot initiate return statement with unknown expression"
-    )
-(* Return (ReturnStmt.init id.token Expression.Unknown) *)
+    | (Token.Return) -> Return (ReturnStmt.init stmt_token expr)
+    | (Token.Bang) -> failwith "unimplemented!"
+    | (Token.Minus) -> failwith "unimplemented!"
     | _ -> failwith "invalid stmt type"
   ;;
 
   let string_of = function
-    | Let stmt -> LetStmt.string_of stmt
-    | Return stmt -> ReturnStmt.string_of stmt
-    | Expression stmt -> ExpressionStmt.string_of stmt
-    (* | _ -> failwith "Cannot convert stmt to string" *)
+    | Let stmt -> "Stmt.Let: " ^ LetStmt.string_of stmt
+    | Return stmt -> "Stmt.Return: " ^ ReturnStmt.string_of stmt
+    | Expression stmt -> "Stmt.Expression: " ^ ExpressionStmt.string_of stmt
+  ;;
 
   let eq (a : t) (b : t) : bool = 
     match (a, b) with
@@ -250,8 +311,8 @@ end
 type program = Stmt.t list 
 
 let rec print_program = function 
-  | [] -> print_endline "EOF\n"
+  | [] -> print_endline "PrintProgram EOF\n"
   | hd :: tl -> 
     let stmt = Stmt.string_of hd in
-    let () = print_endline ("Stmt: " ^ stmt) in
+    let () = print_endline ("PrintProgram Stmt: " ^ stmt) in
     print_program tl

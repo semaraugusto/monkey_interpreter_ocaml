@@ -56,32 +56,6 @@ module Parser = struct
       peek_token; 
       (* prefix_fns  *)
     }
-  let parse_prefix parser = 
-    let token = parser.cur_token in
-    let () = print_endline ("prefix_parsing: " ^ Token.string_of token) in 
-    let parser = next_token parser in
-    (parser, (Ast.Expression.init token))
-  ;;
-
-  let prefix_fn parser (tok : Token.t) = match tok.t_type with 
-    | Token.Int -> parse_integer parser
-    | Token.Ident -> parse_identifier parser
-    | Token.Bang -> parse_prefix parser
-    | Token.Minus -> parse_prefix parser
-    | _ -> failwith ("failed to parse expr")
-  ;;
-  
-
-  let parse_expr (parser : t) : (t * Expression.t) = 
-    let cur_token = parser.cur_token in
-    print_endline ("parse_expr token: " ^ Token.string_of cur_token);
-    let () = print_endline ("parse_expr token: " ^ Token.string_of cur_token) in
-
-    let (parser, expr) = prefix_fn parser cur_token in
-
-    (parser, expr)
-  ;;
-
   let next_token_if parser (t_type : Token.t_type) = match (peek_token_is parser t_type) with
     | true -> next_token parser
     (* | false -> failwith ("failed to parse let statement") *)
@@ -89,21 +63,64 @@ module Parser = struct
   ;;
 
 
-  let parse_expr_stmt (parser : t) : (t * Ast.Stmt.t) = 
+  let rec parse_prefix parser = 
+    let token = parser.cur_token in
+    let () = print_endline ("prefix_parsing      1: " ^ Token.string_of token) in 
+    let () = print_endline ("prefix_parsing peek 1: " ^ Token.string_of parser.peek_token) in 
+    let parser = next_token parser in
+    let (parser, right) = prefix_fn parser parser.cur_token in
+    let () = print_endline ("prefix_parsing      2: " ^ Token.string_of parser.cur_token) in 
+    let () = print_endline ("prefix_parsing peek 2: " ^ Token.string_of parser.peek_token) in 
+    (* let parser = next_token_if parser Token.Semicolon in *)
+    match peek_token_is parser Token.Semicolon with 
+    true -> (
+      (* let parser = next_token parser in *)
+      let () = print_endline ("prefix_parsing      3: " ^ Token.string_of parser.cur_token) in 
+      let () = print_endline ("prefix_parsing peek 3: " ^ Token.string_of parser.peek_token) in 
+      let expr = Ast.Expression.rec_init token right in
+      let () = print_endline ("prefix_parsing expr: " ^ Expression.string_of expr) in 
+      (parser, expr)
+    )
+    | false -> (
+      let parser = next_token parser in
+      let () = print_endline ("prefix_parsing      3: " ^ Token.string_of parser.cur_token) in 
+      let () = print_endline ("prefix_parsing peek 3: " ^ Token.string_of parser.peek_token) in 
+      let expr = Ast.Expression.rec_init token right in
+      let () = print_endline ("prefix_parsing expr: " ^ Expression.string_of expr) in 
+      (parser, expr)
+    )
+    and 
+    prefix_fn parser (tok : Token.t) = match tok.t_type with 
+      | Token.Int -> parse_integer parser
+      | Token.Ident -> parse_identifier parser
+      | Token.Bang -> parse_prefix parser
+      | Token.Minus -> parse_prefix parser
+      | _ -> failwith ("failed to parse expr")
+    ;;
+  ;;
+
+  let parse_expr (parser : t) : (t * Expression.t) = 
     let cur_token = parser.cur_token in
+    print_endline ("parse_expr token: " ^ Token.string_of cur_token);
+    print_endline ("parse_expr token: " ^ Token.string_of cur_token);
 
     let (parser, expr) = prefix_fn parser cur_token in
 
-    print_endline ("expr_stmt expr: " ^ Expression.string_of expr);
-    print_endline ("expr_stmt token: " ^ Token.string_of cur_token);
+    (parser, expr)
+  ;;
+
+  let parse_expr_stmt (parser : t) : (t * Ast.Stmt.t) = 
+    let cur_token = parser.cur_token in
+
     let (parser, expr) = parse_expr parser in
 
-    print_endline ("expr_stmt stmt: " ^ Expression.string_of expr);
+    print_endline ("expr_stmt expr: " ^ Expression.string_of expr);
 
     let stmt = Ast.Stmt.Expression (Ast.ExpressionStmt.init cur_token expr) in
 
-    let parser = next_token_if parser Token.Semicolon in
+    print_endline ("expr_stmt stmt: " ^ Stmt.string_of stmt);
 
+    let parser = next_token parser in
     (* (parser, Ast.Statatement.init  *)
     (parser, stmt)
   ;;
@@ -120,7 +137,7 @@ module Parser = struct
 
     let parser = next_token_if parser Token.Ident in
 
-    let id = Ast.Identifier.of_token parser.cur_token in 
+    let id_token = parser.cur_token in 
 
     let parser = next_token_if parser Token.Assign in
 
@@ -129,7 +146,7 @@ module Parser = struct
 
     let (parser, expr) = parse_expr parser in
 
-    let stmt = Ast.Stmt.init stmt_token id expr in
+    let stmt = Ast.Stmt.init stmt_token id_token expr in
     let parser = next_token_if parser Token.Semicolon in
 
     (parser, stmt)
@@ -138,10 +155,10 @@ module Parser = struct
   let parse_return_stmt parser = 
     let stmt_token = parser.cur_token in
     let parser = next_token parser in
-    let id = Ast.Identifier.of_token parser.cur_token in 
+    let id_token = parser.cur_token in 
     let expr =  Ast.Expression.init parser.cur_token in 
 
-    let stmt = Ast.Stmt.init stmt_token id expr in
+    let stmt = Ast.Stmt.init stmt_token id_token expr in
 
     let parser = skip_until parser Token.Semicolon in
 

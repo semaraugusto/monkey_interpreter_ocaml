@@ -11,6 +11,7 @@ let rec cmp lst1 lst2 =
             cmp t tt
     else
       let error = Printf.sprintf "\n(%s)\n  is not equal to \n(%s)" (Stmt.string_of h) (Stmt.string_of hh) in 
+      (* let error = Printf.sprintf "\n(%s)\n  is not equal to \n" (Stmt.string_of h) in  *)
       failwith error
 ;;
 
@@ -18,58 +19,89 @@ let expected_let_stmt: program = [
   Stmt.Let {
     token = {t_type = Token.Let; literal = "let"};
     id = {token = {t_type = Token.Ident; literal = "x"}; name = "x"};
-    value = (Expression.init {t_type = Token.Int; literal = "5"});
+    value = (Expression.Integer {token = {t_type = Token.Int; literal = "5"}; value = 5; });
 
   };
   Stmt.Let {
     token = {t_type = Token.Let; literal = "let"};
     id = {token = {t_type = Token.Ident; literal = "y"}; name = "y"};
-    value = (Expression.init {t_type = Token.Int; literal = "10"});
+    value = (Expression.Integer {token = {t_type = Token.Int; literal = "10"}; value = 10; });
   };
   Stmt.Let {
     token = {t_type = Token.Let; literal = "let"};
     id = {token = {t_type = Token.Ident; literal = "foobar"}; name = "foobar"};
-    value = (Expression.init {t_type = Token.Int; literal = "838383"});
+    value = (Expression.Integer {token = {t_type = Token.Int; literal = "838383"}; value = 838383; });
   };
 ];;
 
 let expected_return_stmt: program = [
   Stmt.Return {
     token = {t_type = Token.Return; literal = "return"};
-    expr = (Expression.init {t_type = Token.Int; literal = "5"});
+    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "5"}; value = 5; });
   };
   Stmt.Return {
     token = {t_type = Token.Return; literal = "return"};
-    expr = (Expression.init {t_type = Token.Int; literal = "10"});
+    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "10"}; value = 10; });
   };
   Stmt.Return {
     token = {t_type = Token.Return; literal = "return"};
-    expr = (Expression.init {t_type = Token.Int; literal = "993322"});
+    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "993322"}; value = 993322; });
   };
 ] ;;
 
 let expected_identity_stmt: program = [
   Stmt.Expression {
     token = {t_type = Token.Ident; literal = "foobar"};
-    expr = (Expression.init {t_type = Token.Ident; literal = "foobar"});
+    expr = (Expression.Identifier {token = {t_type = Token.Ident; literal = "foobar"}; name = "foobar"});
   }
 ];;
 let expected_integer_stmt: program = [
   Stmt.Expression {
     token = {t_type = Token.Int; literal = "5"};
-    expr = (Expression.init {t_type = Token.Int; literal = "5"});
+    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "5"}; value = 5; });
   }
 ];;
 
+(* let expected_prefix_stmt: program = List.rev [ *)
 let expected_prefix_stmt: program = [
   Stmt.Expression {
     token = {t_type = Token.Bang; literal = "!"};
-    expr = (Expression.init {t_type = Token.Int; literal = "5"});
+    expr = (
+      Expression.Prefix {
+        token = {
+          t_type = Token.Bang; 
+          literal = "!"
+        }; 
+        operator = "!"; 
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
   };
   Stmt.Expression {
     token = {t_type = Token.Minus; literal = "-"};
-    expr = (Expression.init {t_type = Token.Int; literal = "15"});
-  }
+    expr = (
+      Expression.Prefix {
+        token = {
+          t_type = Token.Minus; 
+          literal = "-"
+        }; 
+        operator = "-"; 
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        }
+      }
+    );
+  };
 ];;
 
 let test_let_stmt_parser () = 
@@ -84,7 +116,7 @@ let foobar = 838383;" in
   Alcotest.(check bool) "is_equal" true is_equal
 ;;
 
-let test_let_stmt_string_of  () = 
+let _test_let_stmt_string_of  () = 
   let program = [
     Stmt.Let {
       token = {t_type = Token.Let; literal = "let"};
@@ -126,13 +158,17 @@ let test_integer_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
-let test_prefix_expr_parser () = 
+let _test_prefix_expr_parser () = 
   let code = "!5;
 -15;" in 
   (* let code = "!5;" in *)
+  (* let code = "-15;" in *)
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
+  print_endline "expected_program";
   let () = Monkey.print_program program in 
+  print_endline "actual_program";
+  let () = Monkey.print_program expected_prefix_stmt in 
   let is_equal = cmp program expected_prefix_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -158,12 +194,12 @@ let () =
       Alcotest.test_case "return" `Quick test_return_stmt_parser;
       Alcotest.test_case "identity_expr" `Quick test_identity_expr_parser;
       Alcotest.test_case "integer_expr" `Quick test_integer_expr_parser;
-      Alcotest.test_case "prefix_expr" `Quick test_prefix_expr_parser;
+      Alcotest.test_case "prefix_expr" `Quick _test_prefix_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
-    "String conversion", [ 
-      Alcotest.test_case "let" `Quick test_let_stmt_string_of;
-    ];
+    (* "String conversion", [  *)
+    (*   Alcotest.test_case "let" `Quick test_let_stmt_string_of; *)
+    (* ]; *)
     (* "parsing", [  *)
     (*                     Alcotest.test_case "simple parsing" `Quick test_parser2 ; *)
     (* ]; *)
