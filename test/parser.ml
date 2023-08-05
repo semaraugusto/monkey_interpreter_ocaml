@@ -66,10 +66,10 @@ let expected_prefix_stmt: program = [
     token = {t_type = Token.Bang; literal = "!"};
     expr = (Expression.init {t_type = Token.Int; literal = "5"});
   };
-  (* Stmt.Expression { *)
-  (*   token = {t_type = Token.Minus; literal = "-"}; *)
-  (*   expr = (Expression.init {t_type = Token.Int; literal = "15"}); *)
-  (* } *)
+  Stmt.Expression {
+    token = {t_type = Token.Minus; literal = "-"};
+    expr = (Expression.init {t_type = Token.Int; literal = "15"});
+  }
 ];;
 
 let test_let_stmt_parser () = 
@@ -127,9 +127,9 @@ let test_integer_expr_parser () =
 ;;
 
 let test_prefix_expr_parser () = 
-(*   let code = "!5; *)
-(* -15;" in  *)
-  let code = "!5;" in
+  let code = "!5;
+-15;" in 
+  (* let code = "!5;" in *)
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   let () = Monkey.print_program program in 

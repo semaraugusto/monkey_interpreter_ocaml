@@ -63,11 +63,11 @@ module Parser = struct
     (parser, (Ast.Expression.init token))
   ;;
 
-  (* val prefix_fn : t -> Token.t -> t * Expression.t *)
   let prefix_fn parser (tok : Token.t) = match tok.t_type with 
     | Token.Int -> parse_integer parser
     | Token.Ident -> parse_identifier parser
     | Token.Bang -> parse_prefix parser
+    | Token.Minus -> parse_prefix parser
     | _ -> failwith ("failed to parse expr")
   ;;
   
