@@ -70,6 +70,40 @@ module Token = struct
 (* let END : token = { *)
 (*         t_type = EOF; literal = ""};; *)
 
+  let string_of_t_type t_type = match t_type with
+  | Illegal -> "ILLEGAL"
+  | EOF -> "EOF"
+  (* identifers and literals *)
+  | Ident -> "IDENT"
+  | Int -> "INT"
+  (* | STRING -> "STRING:" ^ tok.literal *)
+  (* operators *)
+  | Assign -> "ASSIGN"
+  | Plus -> "PLUS"
+  | Minus -> "MINUS"
+  | Bang -> "BANG"
+  | Slash -> "SLASH"
+  | Asterisk -> "ASTERISK"
+  | LT -> "LESS THAN"
+  | GT -> "GREATER THAN"
+  | Eq -> "EQUALS"
+  | NotEq -> "NOT EQUALS"
+  (* delimeters *)
+  | Comma -> "COMMA"
+  | Semicolon -> "SEMICOLON"
+  | LParen -> "LPAREN"
+  | RParen -> "RPAREN"
+  | LBrace -> "LBRACE"
+  | RBrace -> "RBRACE"
+  (* keywords *)
+  | Function -> "FUNCTION"
+  | If -> "IF"
+  | Else -> "ELSE"
+  | Return -> "RETURN"
+  | Let -> "LET"
+  | True -> "TRUE"
+  | False -> "FALSE"
+  ;;
 
   let tokenToString tok = match tok.t_type with
   | Illegal -> "ILLEGAL:" ^ tok.literal
@@ -104,6 +138,7 @@ module Token = struct
   | Let -> "LET"
   | True -> "TRUE"
   | False -> "FALSE"
+  ;;
 
   let eof = {t_type = EOF; literal = ""}
 

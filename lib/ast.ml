@@ -52,11 +52,6 @@ module Integer = struct
     Printf.sprintf "Integer: {Token: (%s) Value: %s}" (Token.string_of i.token) (string_of_int i.value)
   ;;
 end
-(* module Expr = struct  *)
-(*   type t = Map.Make(String).t *)
-(*   [@@deriving show] *)
-(* end *)
-
 
 module Expression = struct 
   type t = 
@@ -72,7 +67,8 @@ module Expression = struct
       | _ -> Unknown
     (* Identifier (Identifier.of_token id) *)
   ;;
-  let string_of = function
+
+  let string_of expr = match expr with
     | Identifier id -> Identifier.string_of id
     | Integer i -> Integer.string_of i
     | Unknown -> "Unknown"
@@ -126,10 +122,6 @@ module LetStmt = struct
     value : Expression.t;
   }
     [@@deriving show];;
-
-  (* let token_literal = "let" *)
-  (* let t_type = Token.Let;; *)
-  (* let token : Token.t = {t_type = t_type; literal = token_literal};; *)
 
   let init token id expr = 
     {token; id; value = expr}

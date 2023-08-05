@@ -61,6 +61,17 @@ let expected_integer_stmt: program = [
   }
 ];;
 
+let expected_prefix_stmt: program = [
+  Stmt.Expression {
+    token = {t_type = Token.Bang; literal = "!"};
+    expr = (Expression.init {t_type = Token.Int; literal = "5"});
+  };
+  (* Stmt.Expression { *)
+  (*   token = {t_type = Token.Minus; literal = "-"}; *)
+  (*   expr = (Expression.init {t_type = Token.Int; literal = "15"}); *)
+  (* } *)
+];;
+
 let test_let_stmt_parser () = 
   let code = "
 let x = 5;
@@ -115,6 +126,17 @@ let test_integer_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
+let test_prefix_expr_parser () = 
+(*   let code = "!5; *)
+(* -15;" in  *)
+  let code = "!5;" in
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+  let is_equal = cmp program expected_prefix_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
 let test_parser_error () = 
         let code = "
 let x = 5;
@@ -136,6 +158,7 @@ let () =
       Alcotest.test_case "return" `Quick test_return_stmt_parser;
       Alcotest.test_case "identity_expr" `Quick test_identity_expr_parser;
       Alcotest.test_case "integer_expr" `Quick test_integer_expr_parser;
+      Alcotest.test_case "prefix_expr" `Quick test_prefix_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     "String conversion", [ 
