@@ -104,6 +104,35 @@ let expected_prefix_stmt: program = [
   };
 ];;
 
+let expected_infix_stmt: program = [
+  Stmt.Expression {
+    token = {t_type = Token.Plus; literal = "+"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.Plus; 
+          literal = "+"
+        }; 
+        operator = "+"; 
+        left = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+];;
+
 let test_let_stmt_parser () = 
   let code = "
 let x = 5;
@@ -158,11 +187,9 @@ let test_integer_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
-let _test_prefix_expr_parser () = 
+let test_prefix_expr_parser () = 
   let code = "!5;
 -15;" in 
-  (* let code = "!5;" in *)
-  (* let code = "-15;" in *)
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   print_endline "expected_program";
@@ -172,6 +199,19 @@ let _test_prefix_expr_parser () =
   let is_equal = cmp program expected_prefix_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
+
+let _test_infix_expr_parser () = 
+  let code = "5 + 5;" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  print_endline "actual_program";
+  let () = Monkey.print_program program in 
+  print_endline "expected_program";
+  let () = Monkey.print_program expected_infix_stmt in 
+  let is_equal = cmp program expected_infix_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
 
 let test_parser_error () = 
         let code = "
@@ -194,7 +234,8 @@ let () =
       Alcotest.test_case "return" `Quick test_return_stmt_parser;
       Alcotest.test_case "identity_expr" `Quick test_identity_expr_parser;
       Alcotest.test_case "integer_expr" `Quick test_integer_expr_parser;
-      Alcotest.test_case "prefix_expr" `Quick _test_prefix_expr_parser;
+      Alcotest.test_case "prefix_expr" `Quick test_prefix_expr_parser;
+      Alcotest.test_case "infix_expr" `Quick _test_infix_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     (* "String conversion", [  *)

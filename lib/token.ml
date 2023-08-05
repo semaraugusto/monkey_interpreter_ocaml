@@ -38,38 +38,6 @@ module Token = struct
     | Let
   [@@deriving show]
 
-  type t = {
-    literal: string;
-    t_type: t_type;
-  }
-  [@@deriving show]
-
-  let prefixPrecedence = 7
-  let lowest = 1
-
-  let precedence (tok : t_type) = match tok with
-  | Eq
-  | NotEq -> 2
-  | LT
-  | GT -> 3
-  | Plus
-  | Minus -> 4
-  | Slash
-  | Asterisk -> 5
-  | LParen -> 6
-  | LBrace -> 8
-  | _ -> lowest
-
-  let compare (a : t_type) (b : t_type) =
-    let a_prec = precedence a in
-    let b_prec = precedence b in
-    compare a_prec b_prec
-
-
-
-(* let END : token = { *)
-(*         t_type = EOF; literal = ""};; *)
-
   let string_of_t_type t_type = match t_type with
   | Illegal -> "ILLEGAL"
   | EOF -> "EOF"
@@ -104,6 +72,55 @@ module Token = struct
   | True -> "TRUE"
   | False -> "FALSE"
   ;;
+
+
+  type t = {
+    literal: string;
+    t_type: t_type;
+  }
+  [@@deriving show]
+
+  let prefixPrecedence = 7
+  let lowest = 1
+
+  type precedence = 
+    | LOWEST
+    | EQUALS
+    | LESSGREATER
+    | SUM
+    | PRODUCT
+    | PREFIX
+    | CALL
+  [@@deriving show]
+
+  let precedence (tok : t_type) : precedence = match tok with
+  | Eq
+  | NotEq -> EQUALS
+  | LT
+  | GT -> LESSGREATER
+  | Plus
+  | Minus -> SUM
+  | Slash
+  | Asterisk -> PRODUCT
+  | Bang (* TODO: REMOVE THIS?? *)
+  | Int
+  | Ident -> LOWEST
+  | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok)
+  ;;
+  let precedence_of (tok : t) : precedence = 
+    precedence tok.t_type
+  ;;
+
+  let compare (a : t_type) (b : t_type) =
+    let a_prec = precedence a in
+    let b_prec = precedence b in
+    compare a_prec b_prec
+  ;;
+
+
+
+(* let END : token = { *)
+(*         t_type = EOF; literal = ""};; *)
 
   let tokenToString tok = match tok.t_type with
   | Illegal -> "ILLEGAL:" ^ tok.literal

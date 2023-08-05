@@ -86,24 +86,63 @@ end = struct
   let string_of expr = 
     Printf.sprintf "(%s %s %s)" (Token.string_of expr.token) expr.operator (Expression.string_of expr.right)
   ;;
+end and Infix : sig
+  type t = {
+    token : Token.t;
+    left : Expression.t;
+    operator : string;
+    right : Expression.t;
+  }
+  val init : Token.t -> Expression.t -> Expression.t -> t
+  val string_of : t -> string
+  val eq : t -> t -> bool
+end = struct 
+  type t = {
+    token : Token.t;
+    left : Expression.t;
+    operator : string;
+    right : Expression.t;
+  }
+
+  let init token left right = 
+    {token; left; operator = token.literal; right;}
+
+  let string_of expr = 
+    Printf.sprintf "(%s %s %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
+
+  let eq a b = 
+    let is_token_eq = Token.eq a.token b.token in
+    Printf.printf "token: %s == %s: %b" (Token.string_of a.token) (Token.string_of b.token) is_token_eq;
+    let is_left_eq = Expression.eq a.left b.left in
+    Printf.printf "left: %s == %s: %b" (Expression.string_of a.left) (Expression.string_of b.left) is_left_eq;
+    let is_operator_eq = a.operator = b.operator in
+    Printf.printf "operator: %s == %s: %b" a.operator b.operator is_operator_eq;
+    let is_right_eq = Expression.eq a.right b.right in
+    Printf.printf "right: %s == %s: %b" (Expression.string_of a.right) (Expression.string_of b.right) is_right_eq;
+
+    is_token_eq && is_left_eq && is_operator_eq && is_right_eq
+
 end
 and Expression : sig
   type t = 
     | Identifier of Identifier.t
     | Integer of Integer.t
     | Prefix of Prefix.t
+    | Infix of Infix.t
   [@@deriving show]
 
     val init : Token.t -> t
     val init_integer : Token.t -> t
     val eq : t -> t -> bool
     val string_of : t -> string
-    val rec_init : Token.t -> t -> t;;
+    val init_prefix : Token.t -> t -> t;;
+    val init_infix : Token.t -> t -> t -> t;;
 end = struct 
   type t = 
     | Identifier of Identifier.t
     | Integer of Integer.t
     | Prefix of Prefix.t
+    | Infix of Infix.t
   [@@deriving show]
 
   let init (token : Token.t) = 
@@ -112,17 +151,23 @@ end = struct
       | Token.Int -> Integer (Integer.of_token token)
       | Token.Bang -> failwith "Should not be here"
       | Token.Minus -> failwith "Should not be here"
-      | _ -> failwith "cannot init Stmt from unknown token type"
+      | _ -> failwith ("cannot init Expression with token" ^ Token.string_of token)
     (* Identifier (Identifier.of_token id) *)
   ;;
 
-  let rec_init (token : Token.t) (expr: t) : t  = 
+  let init_prefix (token : Token.t) (expr: t) : t  = 
     match token.t_type with 
-      | Token.Ident -> Identifier (Identifier.of_token token)
-      | Token.Int -> Integer (Integer.of_token token)
       | Token.Bang -> Prefix (Prefix.init token expr)
       | Token.Minus -> Prefix (Prefix.init token expr)
-      | _ -> failwith "cannot init Stmt from unknown token type"
+      | _ -> failwith ("cannot init PrefixExpression with token" ^ Token.string_of token)
+    (* Identifier (Identifier.of_token id) *)
+  ;;
+
+  let init_infix (token : Token.t) (left: t) (right : t) : t =
+    match token.t_type with 
+      | Token.Minus -> Infix (Infix.init token left right)
+      | Token.Plus -> Infix (Infix.init token left right)
+      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
     (* Identifier (Identifier.of_token id) *)
   ;;
 
@@ -130,6 +175,7 @@ end = struct
     | Identifier expr -> "Expression.Identifier: " ^ Identifier.string_of expr
     | Integer expr -> "Expression.Integer: " ^ Integer.string_of expr
     | Prefix expr -> "Expression.Prefix: " ^ Prefix.string_of expr
+    | Infix expr -> "Expression.Infix: " ^ Infix.string_of expr
   ;;
 
   let init_integer i = 
@@ -142,6 +188,7 @@ end = struct
       | (Identifier a, Identifier b) -> Identifier.eq a b
       | (Integer a, Integer b) -> Integer.eq a b
       | (Prefix a, Prefix b) -> Prefix.eq a b
+      | (Infix a, Infix b) -> Infix.eq a b
       | _ -> false
     (* a = b *)
   ;;
