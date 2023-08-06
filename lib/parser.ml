@@ -106,6 +106,7 @@ module Parser = struct
       (* Printf.printf "TRUE infix_token: %s\n" (Token.string_of infix_token); *)
       (* Printf.printf "TRUE cur_token: %s\n" (Token.string_of parser.cur_token); *)
       let (parser, right) = infix_fn parser infix_token left in
+      Printf.printf "true left: %s\n" (Expression.string_of left);
       Printf.printf "true right: %s\n" (Expression.string_of right);
       (parser, right)
     | false -> 
@@ -114,8 +115,8 @@ module Parser = struct
       let parser = next_token parser in
       (* let infix_token = parser.cur_token in *)
       Printf.printf "false new: %s\n" (Token.string_of parser.cur_token);
-      Printf.printf "false left: %s\n" (Expression.string_of left);
       let (parser, expr) = infix_fn parser infix_token left in
+      Printf.printf "false left: %s\n" (Expression.string_of left);
       Printf.printf "false right: %s\n" (Expression.string_of expr);
       (parser, expr)
     and   
@@ -125,6 +126,7 @@ module Parser = struct
         | Plus
         | Minus
         | Asterisk
+        | Slash
         | Eq
         | NotEq
         | LT
@@ -169,7 +171,8 @@ module Parser = struct
     let precedence = cur_precedence parser in
 
     let (parser, expr) = parse_expr parser precedence in
-    print_endline ("PARSE_EXPR_STMT PARSER.CUR_TOKEN: " ^ Token.string_of parser.cur_token);
+    (* print_endline ("PARSE_EXPR_STMT PARSER.CUR_TOKEN: " ^ Token.string_of cur_token); *)
+    (* print_endline ("PARSE_EXPR_STMT PARSER.CUR_TOKEN: " ^ Token.string_of parser.cur_token); *)
     print_endline ("PARSE_EXPR_STMT EXPR: " ^ Expression.string_of expr);
 
     let stmt = Ast.Stmt.Expression (Ast.ExpressionStmt.init cur_token expr) in

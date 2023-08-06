@@ -106,7 +106,8 @@ let expected_prefix_stmt: program = [
 
 let expected_infix_stmt: program = [
   Stmt.Expression {
-    token = {t_type = Token.Plus; literal = "+"};
+    (* token = {t_type = Token.Plus; literal = "+"}; *)
+    token = {t_type = Token.Int; literal = "15"};
     expr = (
       Expression.Infix {
         token = {
@@ -115,11 +116,201 @@ let expected_infix_stmt: program = [
         }; 
         operator = "+"; 
         left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
           token = {
             t_type = Token.Int; 
             literal = "5"
           }; 
           value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.Minus; 
+          literal = "-"
+        }; 
+        operator = "-"; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.Asterisk; 
+          literal = "*"
+        }; 
+        operator = "*"; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.Slash; 
+          literal = "/"
+        }; 
+        operator = "/"; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.LT; 
+          literal = "<"
+        }; 
+        operator = "<"; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.GT; 
+          literal = ">"
+        }; 
+        operator = ">"; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.Eq; 
+          literal = "=="
+        }; 
+        operator = "=="; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
+        };
+        right = Expression.Integer {
+          token = {
+            t_type = Token.Int; 
+            literal = "5"
+          }; 
+          value = 5; 
+        }
+      }
+    );
+  };
+  Stmt.Expression {
+    token = {t_type = Token.Int; literal = "15"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.NotEq; 
+          literal = "!="
+        }; 
+        operator = "!="; 
+        left = Expression.Integer {
+
+          token = {
+            t_type = Token.Int; 
+            literal = "15"
+          }; 
+          value = 15; 
         };
         right = Expression.Integer {
           token = {
@@ -201,11 +392,24 @@ let test_prefix_expr_parser () =
 ;;
 
 let _test_infix_expr_parser () = 
-  let code = "5 + 5;" in 
+  let code = "15 + 5;
+15 - 5;
+15 * 5;
+15 / 5;
+15 < 5;
+15 > 5;
+15 == 5;
+15 != 5;" in 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   print_endline "actual_program";
   let () = Monkey.print_program program in 
+
+  print_endline "___________________-";
+  let () = match program with 
+  | [] -> print_endline "empty program"
+  | hd :: _tl -> print_endline (Stmt.string_of hd) in
+  print_endline "___________________-";
   print_endline "expected_program";
   let () = Monkey.print_program expected_infix_stmt in 
   let is_equal = cmp program expected_infix_stmt in

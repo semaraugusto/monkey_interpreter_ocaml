@@ -105,14 +105,22 @@ end = struct
   }
 
   let init token left right = 
+    print_endline "-----------------------";
+    print_endline "Starting infix init";
+    print_endline (Token.string_of token);
+    print_endline (Expression.string_of left);
+    print_endline (Expression.string_of right);
+    print_endline "END";
+    print_endline "-----------------------";
     {token; left; operator = token.literal; right;}
+    (* {left; operator = token.literal; right;} *)
 
   let string_of expr = 
-    Printf.sprintf "(%s %s %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
+    Printf.sprintf "InfixStmt: (%s <-> operator=\'%s\' <-> %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
 
   let eq a b = 
-    let is_token_eq = Token.eq a.token b.token in
-    Printf.printf "token: %s == %s: %b" (Token.string_of a.token) (Token.string_of b.token) is_token_eq;
+    (* let is_token_eq = Token.eq a.token b.token in *)
+    (* Printf.printf "token: %s == %s: %b" (Token.string_of a.token) (Token.string_of b.token) is_token_eq; *)
     let is_left_eq = Expression.eq a.left b.left in
     Printf.printf "left: %s == %s: %b" (Expression.string_of a.left) (Expression.string_of b.left) is_left_eq;
     let is_operator_eq = a.operator = b.operator in
@@ -120,7 +128,8 @@ end = struct
     let is_right_eq = Expression.eq a.right b.right in
     Printf.printf "right: %s == %s: %b" (Expression.string_of a.right) (Expression.string_of b.right) is_right_eq;
 
-    is_token_eq && is_left_eq && is_operator_eq && is_right_eq
+    is_left_eq && is_operator_eq && is_right_eq
+    (* is_token_eq && is_left_eq && is_operator_eq && is_right_eq *)
 
 end
 and Expression : sig
@@ -165,8 +174,14 @@ end = struct
 
   let init_infix (token : Token.t) (left: t) (right : t) : t =
     match token.t_type with 
-      | Token.Minus -> Infix (Infix.init token left right)
-      | Token.Plus -> Infix (Infix.init token left right)
+      | Token.Minus
+      | Token.Plus
+      | Token.Asterisk
+      | Token.LT
+      | Token.GT
+      | Token.Eq
+      | Token.NotEq
+      | Token.Slash -> Infix (Infix.init token left right)
       | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
     (* Identifier (Identifier.of_token id) *)
   ;;
@@ -310,21 +325,7 @@ module Stmt = struct
     | Expression stmt -> ExpressionStmt.string_of stmt
   ;;
 
-  (* let init (stmt_token : Token.t) (id : Identifier.t) (expr : Expression.t) =  *)
-  (*   match (stmt_token.t_type, expr) with *)
-  (*   | (Token.Let, expr) -> ( *)
-  (*     match expr with  *)
-  (*       | _ -> Let (LetStmt.init stmt_token id expr) *)
-  (*   ) *)
-  (**)
-  (*   | (Token.Return, expr) -> ( *)
-  (*     match expr with  *)
-  (*       | _ -> Return (ReturnStmt.init stmt_token expr) *)
-  (*   ) *)
-  (*   | _ -> failwith "invalid stmt type" *)
-  (* ;; *)
-  let init (stmt_token : Token.t) (aux_token : Token.t) (expr : Expression.t) = 
-    
+  let init (stmt_token : Token.t) (aux_token : Token.t) (expr : Expression.t) =
     match (stmt_token.t_type) with
     | (Token.Let) -> 
         let id = Identifier.of_token aux_token in 
@@ -355,7 +356,7 @@ module Stmt = struct
   ;;
 end
 
-type program = Stmt.t list 
+type program = Stmt.t list
 
 let rec print_program = function 
   | [] -> print_endline "PrintProgram EOF\n"
