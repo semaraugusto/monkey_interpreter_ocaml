@@ -18,6 +18,10 @@ module Parser = struct
   ;;
 
   let peek_token_is parser t_type = 
+    (* Printf.printf "3!! peek_token: %s\n" (Token.string_of parser.peek_token); *)
+    (* Printf.printf "3!! peek_token_t_type: %s\n" (Token.string_of_t_type parser.peek_token.t_type); *)
+  (*   Printf.printf "3!! t_type: %s\n" (Token.string_of_t_type t_type); *)
+  (* Printf.printf "3!! t_type: %b\n" (parser.peek_token.t_type = t_type); *)
     parser.peek_token.t_type = t_type
   ;;
 
@@ -100,6 +104,7 @@ module Parser = struct
 
   let rec parse_infix parser left = 
     let infix_token = parser.cur_token in
+    let parser = next_token parser in
 
     match peek_token_is parser Token.Semicolon with 
     true -> 
@@ -112,7 +117,6 @@ module Parser = struct
     | false -> 
       Printf.printf "false infix_token: %s\n" (Token.string_of infix_token);
       Printf.printf "false old: %s\n" (Token.string_of parser.cur_token);
-      let parser = next_token parser in
       (* let infix_token = parser.cur_token in *)
       Printf.printf "false new: %s\n" (Token.string_of parser.cur_token);
       let (parser, expr) = infix_fn parser infix_token left in
@@ -140,28 +144,27 @@ module Parser = struct
   ;;
 
   let parse_expr (parser : t) (_precedence : Token.precedence): (t * Expression.t) = 
+    print_endline "parse_expr!!!!";
+    Printf.printf "1 cur_token: %s\n" (Token.string_of parser.cur_token);
+    Printf.printf "1 peek_token: %s\n" (Token.string_of parser.peek_token);
     let cur_token = parser.cur_token in
     let (parser, left) = prefix_fn parser cur_token in
 
-    if (peek_token_is parser Token.Semicolon) then (
-      (parser, left)
-    ) else (
-      (* let precedence = cur_precedence parser in *)
-      (* let cur_token = parser.cur_token in *)
-      (* Printf.printf "PARSE_EXPR ELSE cur_token: %s\n" (Token.string_of cur_token); *)
-      (* print_endline ("PARSE_EXPR ELSE parser.cur_token: " ^ Token.string_of parser.cur_token); *)
+    Printf.printf "2 cur_token: %s\n" (Token.string_of parser.cur_token);
+    Printf.printf "2 peek_token: %s\n" (Token.string_of parser.peek_token);
+    Printf.printf "left: %s\n" (Expression.string_of left);
+    
+    Printf.printf "peek_token is: %b\n" (peek_token_is parser Token.Semicolon);
+
+    match (not (peek_token_is parser Token.Semicolon)) &&  (_precedence < peek_precedence parser) with 
+    true -> (
+      Printf.printf "33333333333";
       let parser = next_token parser in
-      let cur_token = parser.cur_token in
-      (* Printf.printf "PARSE_EXPR ELSE cur_token: %s\n" (Token.string_of cur_token); *)
-      (* print_endline ("PARSE_EXPR ELSE parser.cur_token: " ^ Token.string_of parser.cur_token); *)
-      let (parser, right) = parse_infix parser left in
-      (* Printf.printf "PARSE_EXPR  ELSE cur_token: %s\n" (Token.string_of cur_token); *)
-      (* (* print_endline ("PARSE_EXPR ELSE cur_token: " ^ Token.string_of parser.cur_token); *) *)
-      (* print_endline ("PARSE_EXPR ELSE parser.cur_token: " ^ Token.string_of parser.cur_token); *)
-      print_endline ("parse_expr else cur_token: " ^ Token.string_of cur_token);
-      let expr = Ast.Expression.init_infix cur_token left right in
-      print_endline ("parse_expr else expression: " ^ Expression.string_of expr);
-      (parser, expr)
+      let (parser, left) = parse_infix parser left in
+      (parser, left)
+    )
+    | false -> (
+      (parser, left)
     )
   ;;
 
@@ -200,8 +203,12 @@ module Parser = struct
 
     let parser = next_token_if parser Token.Assign in
 
-    (* Ignore assign token *)
+    (* (* Ignore assign token *) *)
     let parser = next_token parser in
+    print_endline "parse_let_stmt";
+    Printf.printf "cur_token: %s\n" (Token.string_of parser.cur_token);
+    Printf.printf "peek_token: %s\n" (Token.string_of parser.peek_token);
+    (* Printf.printf "left: %s\n" (Expression.string_of left); *)
 
     let (parser, expr) = parse_expr parser Token.LOWEST in 
 

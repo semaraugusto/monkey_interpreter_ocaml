@@ -322,9 +322,51 @@ let expected_infix_stmt: program = [
       }
     );
   };
+  Stmt.Expression {
+    token = {t_type = Token.Minus; literal = "5"};
+    expr = (
+      Expression.Infix {
+        token = {
+          t_type = Token.Minus; 
+          literal = "-"
+        }; 
+        operator = "-"; 
+        left = Expression.Prefix {
+          token = {
+            t_type = Token.Minus; 
+            literal = "-"
+          }; 
+          operator = "-"; 
+          right = Expression.Identifier {
+            token = {
+              t_type = Token.Ident; 
+              literal = "a"
+            }; 
+            name = "a"; 
+          }
+        };
+        right = Expression.Identifier {
+          token = {
+            t_type = Token.Ident; 
+            literal = "b"
+          }; 
+          name = "b"; 
+        }
+      }
+    );
+  };
 ];;
 
-let test_let_stmt_parser () = 
+(* let _test_let_stmt_parser () =  *)
+(*   let code = " *)
+(* let x = 5;" in  *)
+(*   let parser = Monkey.Parser.init code in  *)
+(*   let program = Monkey.Parser.parse_program parser [] in  *)
+(*   let () = Monkey.print_program program in  *)
+(*   let is_equal = cmp program expected_let_stmt in *)
+(*   Alcotest.(check bool) "is_equal" true is_equal *)
+(* ;; *)
+let _test_let_stmt_parser () = 
   let code = "
 let x = 5;
 let y = 10;
@@ -349,7 +391,7 @@ let _test_let_stmt_string_of  () =
   Alcotest.(check string) "is_equal" expected actual
 ;;
 
-let test_return_stmt_parser () = 
+let _test_return_stmt_parser () = 
   let code = "return 5;
 return 10;
 return 993322;" in 
@@ -360,7 +402,7 @@ return 993322;" in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
-let test_identity_expr_parser () = 
+let _test_identity_expr_parser () = 
   let code = "foobar;" in 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
@@ -369,7 +411,7 @@ let test_identity_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
-let test_integer_expr_parser () = 
+let _test_integer_expr_parser () = 
   let code = "5;" in 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
@@ -378,7 +420,7 @@ let test_integer_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
-let test_prefix_expr_parser () = 
+let _test_prefix_expr_parser () = 
   let code = "!5;
 -15;" in 
   let parser = Monkey.Parser.init code in 
@@ -399,7 +441,8 @@ let _test_infix_expr_parser () =
 15 < 5;
 15 > 5;
 15 == 5;
-15 != 5;" in 
+15 != 5;
+-a - b;" in 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   print_endline "actual_program";
@@ -434,11 +477,11 @@ let foobar 838383;" in
 let () =
   Alcotest.run "Parsing" [
     "Statements", [ 
-      Alcotest.test_case "let" `Quick test_let_stmt_parser;
-      Alcotest.test_case "return" `Quick test_return_stmt_parser;
-      Alcotest.test_case "identity_expr" `Quick test_identity_expr_parser;
-      Alcotest.test_case "integer_expr" `Quick test_integer_expr_parser;
-      Alcotest.test_case "prefix_expr" `Quick test_prefix_expr_parser;
+      Alcotest.test_case "let" `Quick _test_let_stmt_parser;
+      Alcotest.test_case "return" `Quick _test_return_stmt_parser;
+      Alcotest.test_case "identity_expr" `Quick _test_identity_expr_parser;
+      Alcotest.test_case "integer_expr" `Quick _test_integer_expr_parser;
+      Alcotest.test_case "prefix_expr" `Quick _test_prefix_expr_parser;
       Alcotest.test_case "infix_expr" `Quick _test_infix_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];

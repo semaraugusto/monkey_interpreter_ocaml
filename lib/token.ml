@@ -105,7 +105,8 @@ module Token = struct
   | Bang (* TODO: REMOVE THIS?? *)
   | Int
   | Ident -> LOWEST
-  | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok)
+  | _ -> LOWEST
+  (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *)
   ;;
   let precedence_of (tok : t) : precedence = 
     precedence tok.t_type
