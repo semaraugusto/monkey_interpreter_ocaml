@@ -92,7 +92,116 @@ module Integer = struct
     Printf.sprintf "%d" stmt.value
 end
 
-module rec Prefix : sig
+module rec Expression : sig
+  type t = 
+    | Boolean of Boolean.t
+    | Identifier of Identifier.t
+    | Integer of Integer.t
+    | Prefix of Prefix.t
+    | Infix of Infix.t
+    | If of If.t
+  [@@deriving show]
+
+    val init : Token.t -> t
+    val init_integer : Token.t -> t
+    val eq : t -> t -> bool
+    val string_of : t -> string
+    val print : t -> string
+    val init_prefix : Token.t -> t -> t;;
+    val init_infix : Token.t -> t -> t -> t;;
+    (* val init_if : Token.t -> t -> BlockStmt.t -> BlockStmt.t -> t;; *)
+    val init_if : Token.t -> t -> BlockStmt.t -> t;;
+
+end = struct 
+  type t = 
+    | Boolean of Boolean.t
+    | Identifier of Identifier.t
+    | Integer of Integer.t
+    | Prefix of Prefix.t
+    | Infix of Infix.t
+    | If of If.t
+  [@@deriving show]
+
+  let init (token : Token.t) = 
+    match token.t_type with 
+      | Token.Ident -> Identifier (Identifier.of_token token)
+      | Token.Int -> Integer (Integer.of_token token)
+      | Token.False
+      | Token.True -> Boolean (Boolean.of_token token)
+      | Token.Bang -> failwith "Should not be here"
+      | Token.Minus -> failwith "Should not be here"
+      | _ -> failwith ("cannot init Expression with token" ^ Token.string_of token)
+    (* Identifier (Identifier.of_token id) *)
+  ;;
+
+  let init_prefix (token : Token.t) (expr: t) : t  = 
+    match token.t_type with 
+      | Token.Bang -> Prefix (Prefix.init token expr)
+      | Token.Minus -> Prefix (Prefix.init token expr)
+      | _ -> failwith ("cannot init PrefixExpression with token" ^ Token.string_of token)
+    (* Identifier (Identifier.of_token id) *)
+  ;;
+
+  let init_infix (token : Token.t) (left: t) (right : t) : t =
+    match token.t_type with 
+      | Token.Minus
+      | Token.Plus
+      | Token.Asterisk
+      | Token.LT
+      | Token.GT
+      | Token.Eq
+      | Token.NotEq
+      | Token.Slash -> Infix (Infix.init token left right)
+      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
+    (* Identifier (Identifier.of_token id) *)
+  ;;
+
+  (* let init_if (token : Token.t) (condition: t) (consequence : BlockStmt.t) (right : BlockStmt.t) : t = *)
+  let init_if (token : Token.t) (condition: t) (consequence : BlockStmt.t) : t =
+    match token.t_type with 
+      (* | Token.If -> If (If.init token condition consequence right) *)
+      | Token.If -> If (If.init token condition consequence)
+      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
+    (* Identifier (Identifier.of_token id) *)
+
+  ;;
+
+  let string_of expr = match expr with
+    | Boolean expr -> "Expression.Boolean: " ^ Boolean.string_of expr
+    | Identifier expr -> "Expression.Identifier: " ^ Identifier.string_of expr
+    | Integer expr -> "Expression.Integer: " ^ Integer.string_of expr
+    | Prefix expr -> "Expression.Prefix: " ^ Prefix.string_of expr
+    | Infix expr -> "Expression.Infix: " ^ Infix.string_of expr
+    | If expr -> "Expression.If: " ^ If.string_of expr
+  ;;
+
+  let print expr = match expr with
+    | Boolean expr -> Boolean.print expr
+    | Identifier expr -> Identifier.print expr
+    | Integer expr -> Integer.print expr
+    | Prefix expr -> Prefix.print expr
+    | Infix expr -> Infix.print expr
+    | If expr -> If.print expr
+  ;;
+
+  let init_integer i = 
+    Integer (Integer.of_token i)
+  ;;
+
+  let eq a b = 
+    (* let () = Printf.printf "EQAUSL{???: %s %s\n" (string_of a) (string_of b) in *)
+    match (a, b) with 
+      | (Boolean a, Boolean b) -> Boolean.eq a b
+      | (Identifier a, Identifier b) -> Identifier.eq a b
+      | (Integer a, Integer b) -> Integer.eq a b
+      | (Prefix a, Prefix b) -> Prefix.eq a b
+      | (Infix a, Infix b) -> Infix.eq a b
+      | (If a, If b) -> If.eq a b
+      | _ -> false
+    (* a = b *)
+  ;;
+end
+and Prefix : sig
   type t = {
     token : Token.t;
     operator : string;
@@ -130,7 +239,8 @@ end = struct
   let print expr = 
     Printf.sprintf "(\'%s\' %s)" expr.operator (Expression.print expr.right)
 
-end and Infix : sig
+end 
+and Infix : sig
   type t = {
     token : Token.t;
     left : Expression.t;
@@ -167,211 +277,70 @@ end = struct
     is_left_eq && is_operator_eq && is_right_eq
 
 end
-and Expression : sig
+and If : sig
+  type t = {
+    token : Token.t;
+    condition : Expression.t;
+    consequence : BlockStmt.t;
+    (* alternative : BlockStmt.t; *)
+  };;
+  val string_of : t -> string
+  val print : t -> string
+  val eq : t -> t -> bool
+  val init : Token.t -> Expression.t -> BlockStmt.t -> t
+
+end = struct
+  type t = {
+    token : Token.t;
+    condition : Expression.t;
+    consequence : BlockStmt.t;
+    (* alternative : BlockStmt.t; *)
+  };;
+  let print stmt =
+    (* Printf.sprintf "if %s then %s else %s)" (Expression.print stmt.condition) (BlockStmt.string_of stmt.consequence) (BlockStmt.string_of stmt.alternative) *)
+    Printf.sprintf "if %s then %s " (Expression.print stmt.condition) (BlockStmt.string_of stmt.consequence)
+  ;;
+  let string_of stmt = print stmt;;
+
+  (* let init token condition consequence alternative =  *)
+    (* {token; condition; consequence; alternative} *)
+  let init token condition consequence = 
+    {token; condition; consequence;}
+
+  let eq a b = 
+    (* SHOULD I REMOVE TOKEN CHECK? *)
+    let is_token_eq = Token.eq a.token b.token in
+    Printf.printf "Token is equal:  %b\n" is_token_eq;
+    let is_condition_eq = Expression.eq a.condition b.condition in
+    Printf.printf "condition is equal:  %b\n" is_condition_eq;
+    let is_consequence_eq = BlockStmt.eq a.consequence b.consequence in
+    Printf.printf "consequence a:  %s\n" (BlockStmt.string_of a.consequence);
+    Printf.printf "consequence b:  %s\n" (BlockStmt.string_of b.consequence);
+    Printf.printf "consequence is equal:  %b\n" is_consequence_eq;
+    (* let is_alternative_eq = BlockStmt.eq a.alternative b.alternative in *)
+
+    (* is_token_eq && is_condition_eq && is_consequence_eq && is_alternative_eq *)
+    is_token_eq && is_condition_eq && is_consequence_eq
+  ;;
+end
+and Stmt : sig
   type t = 
-    | Boolean of Boolean.t
-    | Identifier of Identifier.t
-    | Integer of Integer.t
-    | Prefix of Prefix.t
-    | Infix of Infix.t
+      | Let of LetStmt.t
+      | Return of ReturnStmt.t
+      | Expression of ExpressionStmt.t
   [@@deriving show]
-
-    val init : Token.t -> t
-    val init_integer : Token.t -> t
-    val eq : t -> t -> bool
-    val string_of : t -> string
-    val print : t -> string
-    val init_prefix : Token.t -> t -> t;;
-    val init_infix : Token.t -> t -> t -> t;;
-end = struct 
-  type t = 
-    | Boolean of Boolean.t
-    | Identifier of Identifier.t
-    | Integer of Integer.t
-    | Prefix of Prefix.t
-    | Infix of Infix.t
-  [@@deriving show]
-
-  let init (token : Token.t) = 
-    match token.t_type with 
-      | Token.Ident -> Identifier (Identifier.of_token token)
-      | Token.Int -> Integer (Integer.of_token token)
-      | Token.False
-      | Token.True -> Boolean (Boolean.of_token token)
-      | Token.Bang -> failwith "Should not be here"
-      | Token.Minus -> failwith "Should not be here"
-      | _ -> failwith ("cannot init Expression with token" ^ Token.string_of token)
-    (* Identifier (Identifier.of_token id) *)
-  ;;
-
-  let init_prefix (token : Token.t) (expr: t) : t  = 
-    match token.t_type with 
-      | Token.Bang -> Prefix (Prefix.init token expr)
-      | Token.Minus -> Prefix (Prefix.init token expr)
-      | _ -> failwith ("cannot init PrefixExpression with token" ^ Token.string_of token)
-    (* Identifier (Identifier.of_token id) *)
-  ;;
-
-  let init_infix (token : Token.t) (left: t) (right : t) : t =
-    match token.t_type with 
-      | Token.Minus
-      | Token.Plus
-      | Token.Asterisk
-      | Token.LT
-      | Token.GT
-      | Token.Eq
-      | Token.NotEq
-      | Token.Slash -> Infix (Infix.init token left right)
-      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
-    (* Identifier (Identifier.of_token id) *)
-  ;;
-
-  let string_of expr = match expr with
-    | Boolean expr -> "Expression.Boolean: " ^ Boolean.string_of expr
-    | Identifier expr -> "Expression.Identifier: " ^ Identifier.string_of expr
-    | Integer expr -> "Expression.Integer: " ^ Integer.string_of expr
-    | Prefix expr -> "Expression.Prefix: " ^ Prefix.string_of expr
-    | Infix expr -> "Expression.Infix: " ^ Infix.string_of expr
-  ;;
-
-  let print expr = match expr with
-    | Boolean expr -> Boolean.print expr
-    | Identifier expr -> Identifier.print expr
-    | Integer expr -> Integer.print expr
-    | Prefix expr -> Prefix.print expr
-    | Infix expr -> Infix.print expr
-  ;;
-
-  let init_integer i = 
-    Integer (Integer.of_token i)
-  ;;
-
-  let eq a b = 
-    (* let () = Printf.printf "EQAUSL{???: %s %s\n" (string_of a) (string_of b) in *)
-    match (a, b) with 
-      | (Boolean a, Boolean b) -> Boolean.eq a b
-      | (Identifier a, Identifier b) -> Identifier.eq a b
-      | (Integer a, Integer b) -> Integer.eq a b
-      | (Prefix a, Prefix b) -> Prefix.eq a b
-      | (Infix a, Infix b) -> Infix.eq a b
-      | _ -> false
-    (* a = b *)
-  ;;
-end
-
-module ExpressionStmt = struct
-  type t = {
-    token : Token.t;
-    expr : Expression.t;
-  }
-  [@@deriving show]
-
-  let token_literal expr = expr.token.literal;;
-
-  let init (token : Token.t) (expr : Expression.t) = 
-    {token; expr }
-  ;;
-
-  let eq a b = 
-    match (a, b) with
-    | ({token = a_token; expr = a_expr}, {token = b_token; expr = b_expr}) -> 
-      (Token.eq a_token b_token) && (Expression.eq a_expr b_expr)
-  ;;
-  let string_of (stmt : t) = 
-    Printf.sprintf "ExpressionStmt: {(%s) (%s)}" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
-  ;;
-  let print (stmt : t) = 
-    Printf.sprintf "%s" (Expression.print stmt.expr)
-  ;;
-
-end
-
-module LetStmt = struct
-  type t = {
-    token : Token.t;
-    id : Identifier.t;
-    value : Expression.t;
-  }
-    [@@deriving show];;
-
-  let init token id expr = 
-    {token; id; value = expr}
-  ;;
-
-  let string_of (stmt : t) = 
-    Printf.sprintf "%s %s = %s;" stmt.token.literal stmt.id.token.literal (Expression.string_of stmt.value)
-  ;;
-
-  let eq (a : t) (b : t) = 
-    let () = print_endline "-------------------------" in
-    let () = print_endline "A: " in 
-    let () = print_endline (string_of a) in 
-    let () = print_endline "B: " in 
-    let () = print_endline (string_of b) in 
-    let () = print_endline "-------------------------" in
-    let () = print_endline ("a.token: " ^ (Token.string_of a.token)) in 
-    let () = print_endline ("b.token: " ^ (Token.string_of b.token)) in 
-    let token_eqs = (Token.eq a.token b.token) in
-    let id_eqs = (Identifier.eq a.id b.id) in
-    let expr_eqs = (Expression.eq a.value b.value) in
-    let () = print_endline ("token_eqs: " ^ (string_of_bool token_eqs)) in 
-    let () = print_endline ("id_eqs: " ^ (string_of_bool id_eqs)) in 
-    let () = print_endline ("expr_eqs: " ^ (string_of_bool expr_eqs)) in 
-
-    match (a, b) with
-    | ({token = a_token; id = _a_id; value = _a_value}, {token = b_token; id = _b_id; value = _b_value}) -> 
-      (Token.eq a_token b_token)  &&
-      (Identifier.eq _a_id _b_id) &&
-      (Expression.eq _a_value _b_value)
-      (* && (Identifier.eq a_id b_id) && (Expression.eq a_value b_value) *)
-      (* (Token.eq a_token b_token) && (Identifier.eq a_id b_id) *)
-  
-  ;;
-
-  let print stmt = 
-    print_endline (string_of stmt)
-  ;;
-
-end
-
-module ReturnStmt = struct
-  type t = {
-    token : Token.t;
-    expr : Expression.t;
-    (* value : expr; *)
-  }
-    [@@deriving show];;
-
-  let token_literal = "return";;
-  let t_type = Token.Return;;
-  let tok: Token.t = {t_type = t_type; literal = token_literal};;
-
-  let init token expr = 
-    {token; expr}
-  ;;
-
-  let eq a b = 
-    match (a, b) with
-    | ({token = a_token; expr = a_expr}, {token = b_token; expr = b_expr}) -> 
-      (Token.eq a_token b_token) && (Expression.eq a_expr b_expr)
-      (* (Token.eq a_token b_token)  *)
-  ;;
-
-  let string_of stmt = 
-      Printf.sprintf "ReturnStmt: {Token: (%s) value: (%s)" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
-
-end
-
-module Stmt = struct
+  val init : Token.t -> Token.t -> Expression.t -> t
+  (* val init_integer : Token.t -> t *)
+  val eq : t -> t -> bool
+  val string_of : t -> string
+  val _print : t -> string
+end = struct
   type t = 
       | Let of LetStmt.t
       | Return of ReturnStmt.t
       | Expression of ExpressionStmt.t
   [@@deriving show]
     
-  let token_literal _ = "";;
-
-
   let _string_of = function
     | Let stmt -> LetStmt.string_of stmt
     | Return stmt -> ReturnStmt.string_of stmt
@@ -385,8 +354,8 @@ module Stmt = struct
         Let (LetStmt.init stmt_token id expr)
 
     | (Token.Return) -> Return (ReturnStmt.init stmt_token expr)
-    | (Token.Bang) -> failwith "unimplemented!"
-    | (Token.Minus) -> failwith "unimplemented!"
+    (* | (Token.Bang) -> failwith "unimplemented!" *)
+    (* | (Token.Minus) -> failwith "unimplemented!" *)
     | _ -> failwith "invalid stmt type"
   ;;
 
@@ -410,12 +379,178 @@ module Stmt = struct
     | (a, b) -> ("Cannot compare statements\n" ^ string_of a ^ "\n" ^ (string_of b) |> failwith)
 
 
-  let print stmt = 
-    print_endline (string_of stmt)
+  (* let print stmt =  *)
+  (*   print_endline (string_of stmt) *)
+  (* ;; *)
+end
+and ExpressionStmt : sig
+  type t = {
+    token : Token.t;
+    expr : Expression.t;
+  }
+  [@@deriving show]
+  val init : Token.t -> Expression.t -> t
+  val eq : t -> t -> bool
+  val string_of : t -> string
+  val print : t -> string
+
+end = struct
+  type t = {
+    token : Token.t;
+    expr : Expression.t;
+  }
+  [@@deriving show]
+
+  (* let token_literal expr = expr.token.literal;; *)
+
+  let init (token : Token.t) (expr : Expression.t) = 
+    {token; expr }
+  ;;
+
+  let eq a b = 
+    match (a, b) with
+    | ({token = a_token; expr = a_expr}, {token = b_token; expr = b_expr}) -> 
+      (Token.eq a_token b_token) && (Expression.eq a_expr b_expr)
+  ;;
+  let string_of (stmt : t) = 
+    Printf.sprintf "ExpressionStmt: {(%s) (%s)}" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
+  ;;
+  let print (stmt : t) = 
+    Printf.sprintf "%s" (Expression.print stmt.expr)
+  ;;
+
+end
+and LetStmt : sig
+  type t = {
+    token : Token.t;
+    id : Identifier.t;
+    value : Expression.t;
+  }
+  val init : Token.t -> Identifier.t -> Expression.t -> t
+  val eq : t -> t -> bool
+  val string_of : t -> string
+
+end = struct
+  type t = {
+    token : Token.t;
+    id : Identifier.t;
+    value : Expression.t;
+  }
+    [@@deriving show];;
+
+  let init token id expr = 
+    {token; id; value = expr}
+  ;;
+
+  let string_of (stmt : t) = 
+    Printf.sprintf "%s %s = %s;" stmt.token.literal stmt.id.token.literal (Expression.string_of stmt.value)
+  ;;
+
+  let eq (a : t) (b : t) = 
+    match (a, b) with
+    | ({token = a_token; id = _a_id; value = _a_value}, {token = b_token; id = _b_id; value = _b_value}) -> 
+      (Token.eq a_token b_token)  &&
+      (Identifier.eq _a_id _b_id) &&
+      (Expression.eq _a_value _b_value)
   ;;
 end
 
+and ReturnStmt : sig
+  type t = {
+    token : Token.t;
+    expr : Expression.t;
+    (* value : expr; *)
+  }
+    [@@deriving show];;
+  val init : Token.t -> Expression.t -> t
+  val eq : t -> t -> bool
+  val string_of : t -> string
+
+end = struct
+  type t = {
+    token : Token.t;
+    expr : Expression.t;
+    (* value : expr; *)
+  }
+    [@@deriving show];;
+
+  (* let token_literal = "return";; *)
+  (* let t_type = Token.Return;; *)
+  (* let tok: Token.t = {t_type = t_type; literal = token_literal};; *)
+
+  let init token expr = 
+    {token; expr}
+  ;;
+
+  let eq a b = 
+    match (a, b) with
+    | ({token = a_token; expr = a_expr}, {token = b_token; expr = b_expr}) -> 
+      (Token.eq a_token b_token) && (Expression.eq a_expr b_expr)
+      (* (Token.eq a_token b_token)  *)
+  ;;
+
+  let string_of stmt = 
+      Printf.sprintf "ReturnStmt: {Token: (%s) value: (%s)" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
+
+end
+and BlockStmt : sig
+  type t = {
+    token: Token.t;
+    statements: Stmt.t list;
+  }
+  [@@deriving show]
+  val init : Token.t -> Stmt.t list -> t
+  (* (* val init_integer : Token.t -> t *) *)
+  val eq : t -> t -> bool
+  val string_of : t -> string
+  (* val _print : t -> string *)
+
+end = struct
+  type t = {
+    token: Token.t;
+    statements: Stmt.t list;
+  }
+
+  let init token statements = 
+    { token; statements; } 
+  ;;
+  let rec block_eq a b = 
+    match (a, b) with
+    | ([], []) -> true
+    | ([], _) -> false
+    | (_, []) -> false
+    | (a_stmt::a_stmts, b_stmt::b_stmts) -> 
+        (Stmt.eq a_stmt b_stmt) && block_eq a_stmts b_stmts
+  ;;
+
+  let rec string_of_statements (stmts : Stmt.t list) = 
+    match stmts with
+    | [] -> ""
+    | stmt::stmts -> 
+      (Stmt.string_of stmt) ^ "\n" ^ (string_of_statements stmts)
+
+  let string_of (block : t) = 
+    Printf.sprintf "BlockStmt: {Token: (%s) statements: (%s)" (Token.string_of block.token) (string_of_statements block.statements)
+  
+
+  let eq a b = 
+    match (a, b) with
+    | ({token = a_token; statements = a_statements}, {token = b_token; statements = b_statements}) -> 
+    let token_is_equal = (Token.eq a_token b_token) in
+      (token_is_equal) && (block_eq  a_statements b_statements)
+        (* (eq {token = a_token; statements = a_stmts} {token = b_token; statements = b_stmts}) *)
+
+
+end
+
 type program = Stmt.t list
+
+(* let rec string_of program output = match program with   *)
+(*   | [] -> "EOF\n" *)
+(*   | hd :: tl ->  *)
+(*       let stmt = Stmt.string_of hd in *)
+(*       let output = Printf.sprintf "Stmt: %s\n" stmt in *)
+(*       string_of tl output *)
 
 let rec print_program = function 
   | [] -> print_endline "PrintProgram EOF\n"
