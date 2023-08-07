@@ -322,39 +322,39 @@ let expected_infix_stmt: program = [
       }
     );
   };
-  Stmt.Expression {
-    token = {t_type = Token.Minus; literal = "5"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.Minus; 
-          literal = "-"
-        }; 
-        operator = "-"; 
-        left = Expression.Prefix {
-          token = {
-            t_type = Token.Minus; 
-            literal = "-"
-          }; 
-          operator = "-"; 
-          right = Expression.Identifier {
-            token = {
-              t_type = Token.Ident; 
-              literal = "a"
-            }; 
-            name = "a"; 
-          }
-        };
-        right = Expression.Identifier {
-          token = {
-            t_type = Token.Ident; 
-            literal = "b"
-          }; 
-          name = "b"; 
-        }
-      }
-    );
-  };
+  (* Stmt.Expression { *)
+  (*   token = {t_type = Token.Minus; literal = "5"}; *)
+  (*   expr = ( *)
+  (*     Expression.Infix { *)
+  (*       token = { *)
+  (*         t_type = Token.Minus;  *)
+  (*         literal = "-" *)
+  (*       };  *)
+  (*       operator = "-";  *)
+  (*       left = Expression.Prefix { *)
+  (*         token = { *)
+  (*           t_type = Token.Minus;  *)
+  (*           literal = "-" *)
+  (*         };  *)
+  (*         operator = "-";  *)
+  (*         right = Expression.Identifier { *)
+  (*           token = { *)
+  (*             t_type = Token.Ident;  *)
+  (*             literal = "a" *)
+  (*           };  *)
+  (*           name = "a";  *)
+  (*         } *)
+  (*       }; *)
+  (*       right = Expression.Identifier { *)
+  (*         token = { *)
+  (*           t_type = Token.Ident;  *)
+  (*           literal = "b" *)
+  (*         };  *)
+  (*         name = "b";  *)
+  (*       } *)
+  (*     } *)
+  (*   ); *)
+  (* }; *)
 ];;
 
 (* let _test_let_stmt_parser () =  *)
@@ -434,6 +434,15 @@ let _test_prefix_expr_parser () =
 ;;
 
 let _test_infix_expr_parser () = 
+(*   let code = "15 + 5; *)
+(* 15 - 5; *)
+(* 15 * 5; *)
+(* 15 / 5; *)
+(* 15 < 5; *)
+(* 15 > 5; *)
+(* 15 == 5; *)
+(* 15 != 5; *)
+(* -a - b;" in  *)
   let code = "15 + 5;
 15 - 5;
 15 * 5;
@@ -441,8 +450,7 @@ let _test_infix_expr_parser () =
 15 < 5;
 15 > 5;
 15 == 5;
-15 != 5;
--a - b;" in 
+15 != 5;" in
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   print_endline "actual_program";

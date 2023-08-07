@@ -104,46 +104,15 @@ module Parser = struct
 
   let rec parse_infix parser left = 
     let infix_token = parser.cur_token in
+    let precedence = cur_precedence parser in
     let parser = next_token parser in
+    let (parser, right) = parse_expr parser precedence in
+    let expr = Ast.Expression.init_infix infix_token left right in
 
-    match peek_token_is parser Token.Semicolon with 
-    true -> 
-      (* Printf.printf "TRUE infix_token: %s\n" (Token.string_of infix_token); *)
-      (* Printf.printf "TRUE cur_token: %s\n" (Token.string_of parser.cur_token); *)
-      let (parser, right) = infix_fn parser infix_token left in
-      Printf.printf "true left: %s\n" (Expression.string_of left);
-      Printf.printf "true right: %s\n" (Expression.string_of right);
-      (parser, right)
-    | false -> 
-      Printf.printf "false infix_token: %s\n" (Token.string_of infix_token);
-      Printf.printf "false old: %s\n" (Token.string_of parser.cur_token);
-      (* let infix_token = parser.cur_token in *)
-      Printf.printf "false new: %s\n" (Token.string_of parser.cur_token);
-      let (parser, expr) = infix_fn parser infix_token left in
-      Printf.printf "false left: %s\n" (Expression.string_of left);
-      Printf.printf "false right: %s\n" (Expression.string_of expr);
-      (parser, expr)
-    and   
-    infix_fn parser (tok : Token.t) left = 
-      let open Token in
-      match tok.t_type with 
-        | Plus
-        | Minus
-        | Asterisk
-        | Slash
-        | Eq
-        | NotEq
-        | LT
-        | GT -> parse_infix parser left
-        | Ident -> parse_identifier parser
-        | Int -> parse_integer parser
-        (* | GT -> failwith ("not implemented") *)
-        | _ -> failwith (
-            "failed to parse infix expr on token " ^ Token.string_of tok
-        )
-  ;;
+    (parser, expr)
 
-  let parse_expr (parser : t) (_precedence : Token.precedence): (t * Expression.t) = 
+  and
+  parse_expr (parser : t) (_precedence : Token.precedence): (t * Expression.t) = 
     print_endline "parse_expr!!!!";
     Printf.printf "1 cur_token: %s\n" (Token.string_of parser.cur_token);
     Printf.printf "1 peek_token: %s\n" (Token.string_of parser.peek_token);
