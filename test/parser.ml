@@ -414,6 +414,30 @@ let expected_if_stmt: program = [
           };])))
   };
 ];;
+let expected_else_stmt: program = [
+  Stmt.Expression {
+    token = Token.init Token.If "if";
+    expr = 
+      (Expression.init_if_else 
+        (Token.init Token.If "if")
+        (Expression.init_infix 
+          (Token.init Token.LT "<")
+          (Expression.init (Token.init Token.Ident "x"))
+          (Expression.init (Token.init Token.Ident "y")))
+        (BlockStmt.init 
+          (Token.init Token.Ident "x")
+          ([Stmt.Expression {
+            token = Token.init Token.Ident "x";
+            expr = Expression.init (Token.init Token.Ident "x");
+          };]))
+        (BlockStmt.init 
+          (Token.init Token.Ident "y")
+          ([Stmt.Expression {
+            token = Token.init Token.Ident "y";
+            expr = Expression.init (Token.init Token.Ident "y");
+          };])))
+  };
+];;
 
 
 let _test_let_stmt_parser () = 
@@ -591,20 +615,29 @@ let _test_if_stmt () =
   let code = "if (x < y ) { x }" in 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
-  print_endline "actual_program";
-  print_endline "___________________-";
   let () = Monkey.print_program program in 
-  print_endline "___________________-";
 
-  print_endline "expected_program";
-  print_endline "___________________-";
   let () = Monkey.print_program expected_precedence_stmt in 
-  print_endline "___________________-";
   let strings = List.map Stmt._print program in 
   let () = match strings with 
   | [] -> print_endline "empty program"
   | hd :: _tl -> (print_endline hd) in
   let is_equal = cmp program expected_if_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
+let _test_else_stmt () = 
+  let code = "if (x < y ) { x } else { y }" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+
+  let () = Monkey.print_program expected_precedence_stmt in 
+  let strings = List.map Stmt._print program in 
+  let () = match strings with 
+  | [] -> print_endline "empty program"
+  | hd :: _tl -> (print_endline hd) in
+  let is_equal = cmp program expected_else_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
@@ -634,6 +667,7 @@ let () =
       Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser;
       Alcotest.test_case "plus_expr" `Quick _test_boolean_expr_parser;
       Alcotest.test_case "if" `Quick _test_if_stmt;
+      Alcotest.test_case "else" `Quick _test_else_stmt;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     (* "String conversion", [  *)

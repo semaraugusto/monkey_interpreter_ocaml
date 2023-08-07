@@ -111,6 +111,7 @@ module rec Expression : sig
     val init_infix : Token.t -> t -> t -> t;;
     (* val init_if : Token.t -> t -> BlockStmt.t -> BlockStmt.t -> t;; *)
     val init_if : Token.t -> t -> BlockStmt.t -> t;;
+    val init_if_else : Token.t -> t -> BlockStmt.t -> BlockStmt.t -> t;;
 
 end = struct 
   type t = 
@@ -156,7 +157,11 @@ end = struct
     (* Identifier (Identifier.of_token id) *)
   ;;
 
-  (* let init_if (token : Token.t) (condition: t) (consequence : BlockStmt.t) (right : BlockStmt.t) : t = *)
+  let init_if_else (token : Token.t) (condition: t) (consequence : BlockStmt.t) (alternative : BlockStmt.t) : t =
+    match token.t_type with 
+      | Token.If -> If (If.init_else token condition consequence alternative)
+      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
+  ;;
   let init_if (token : Token.t) (condition: t) (consequence : BlockStmt.t) : t =
     match token.t_type with 
       (* | Token.If -> If (If.init token condition consequence right) *)
@@ -282,19 +287,20 @@ and If : sig
     token : Token.t;
     condition : Expression.t;
     consequence : BlockStmt.t;
-    (* alternative : BlockStmt.t; *)
+    alternative : BlockStmt.t option;
   };;
   val string_of : t -> string
   val print : t -> string
   val eq : t -> t -> bool
   val init : Token.t -> Expression.t -> BlockStmt.t -> t
+  val init_else : Token.t -> Expression.t -> BlockStmt.t -> BlockStmt.t -> t
 
 end = struct
   type t = {
     token : Token.t;
     condition : Expression.t;
     consequence : BlockStmt.t;
-    (* alternative : BlockStmt.t; *)
+    alternative : BlockStmt.t option;
   };;
   let print stmt =
     (* Printf.sprintf "if %s then %s else %s)" (Expression.print stmt.condition) (BlockStmt.string_of stmt.consequence) (BlockStmt.string_of stmt.alternative) *)
@@ -305,7 +311,10 @@ end = struct
   (* let init token condition consequence alternative =  *)
     (* {token; condition; consequence; alternative} *)
   let init token condition consequence = 
-    {token; condition; consequence;}
+    {token; condition; consequence; alternative = None;}
+
+  let init_else token condition consequence (alternative : BlockStmt.t) = 
+    {token; condition; consequence; alternative = Some alternative; }
 
   let eq a b = 
     (* SHOULD I REMOVE TOKEN CHECK? *)

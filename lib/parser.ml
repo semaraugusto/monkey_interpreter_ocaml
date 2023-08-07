@@ -177,8 +177,17 @@ module Parser = struct
     let (parser, condition) = parse_expr parser Token.LOWEST in
     let parser = next_token_if parser Token.LBrace in
     let (parser, consequence) = parse_block_statement parser in
-    let expr = Expression.init_if _if_token condition consequence in
-    (parser, expr)
+    match peek_token_is parser Token.Else with 
+      false ->
+        let expr = Expression.init_if _if_token condition consequence in
+        (parser, expr)
+    | true -> 
+        let parser = next_token parser in
+        let parser = next_token_if parser Token.LBrace in
+        let (parser, alternative) = parse_block_statement parser in
+      
+        let expr = Expression.init_if_else _if_token condition consequence alternative in
+        (parser, expr)
   and
   parse_expr_stmt (parser : t) : (t * Ast.Stmt.t) = 
     let cur_token = parser.cur_token in
