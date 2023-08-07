@@ -35,17 +35,12 @@ module Parser = struct
   
   let parse_integer (parser : t) : (t * Ast.Expression.t) =
     assert (cur_token_is parser Token.Int);
-    
-    let token = parser.cur_token in
-    let () = print_endline ("integer_parsing: " ^ Token.string_of token) in 
     let token = parser.cur_token in
     (parser, (Ast.Expression.init token))
   ;;
+
   let parse_boolean (parser : t) : (t * Ast.Expression.t) =
     assert ((cur_token_is parser Token.True) || (cur_token_is parser Token.False));
-    
-    let token = parser.cur_token in
-    let () = print_endline ("integer_parsing: " ^ Token.string_of token) in 
     let token = parser.cur_token in
     (parser, (Ast.Expression.init token))
   ;;
@@ -82,13 +77,21 @@ module Parser = struct
 
   let rec parse_expr (parser : t) (precedence: Token.precedence) :  (t * Expression.t) = 
     let (parser, left) = prefix parser in
+    Printf.printf "parse_expr : %s left: %s\n" (Token.string_of parser.cur_token) (Expression.print left);
 
     infix_loop parser precedence left
+
   and
   infix_loop (parser : t) (precedence : Token.precedence) (left: Expression.t) : (t * Expression.t) = 
+    Printf.printf "infix-loop : %s\nleft: %s\n" (Token.string_of parser.cur_token) (Expression.print left);
+    Printf.printf "not peek_is_semicolon : %b\n" (not (peek_token_is parser Token.Semicolon));
+    Printf.printf "precedence : %s\n" (Token.string_of_precedence precedence);
+    Printf.printf "peek_precedence : %s\n" (Token.string_of_precedence (peek_precedence parser));
+    Printf.printf "precedence < peek_precedence : %b\n" (precedence = peek_precedence parser);
     match (not (peek_token_is parser Token.Semicolon)) &&  (precedence < peek_precedence parser) with 
       true -> (
         let parser = next_token parser in
+        Printf.printf "infix-loop TRUE cur_token: %s left: %s\n" (Token.string_of parser.cur_token) (Expression.print left);
         let (parser, left) = parse_infix_expr parser left in
         let (parser, left) = infix_loop parser precedence left in 
         (parser, left)
@@ -97,6 +100,16 @@ module Parser = struct
         (parser, left)
       )
 
+  and
+  parse_grouped_expr parser : (t * Expression.t) = 
+    let parser = next_token parser in
+    let (parser, right) = parse_expr parser Token.LOWEST in
+    Printf.printf "grouped : %s\nright: %s\n" (Token.string_of parser.cur_token) (Expression.print right);
+    let parser = next_token_if parser Token.RParen in
+    (* ignore RParen token  *)
+    (* let parser = next_token parser in *)
+    Printf.printf "grouped cur_token : %s" (Token.string_of parser.cur_token);
+    (parser, right)
   and
   parse_prefix_expr parser : (t * Expression.t) = 
     let prefix_token = parser.cur_token in
@@ -112,6 +125,7 @@ module Parser = struct
     | Token.False -> parse_boolean parser
     | Token.Bang
     | Token.Minus -> parse_prefix_expr parser
+    | Token.LParen -> parse_grouped_expr parser
     | _ -> failwith "prefix not found"
   
   and
@@ -120,6 +134,7 @@ module Parser = struct
     let precedence = cur_precedence parser in
     let parser = next_token parser in
     let (parser, right) = parse_expr parser precedence in
+    Printf.printf "infix_token : %s left: %s right: %s\n" (Token.string_of infix_token) (Expression.print left) (Expression.print right);
     let expr = Ast.Expression.init_infix infix_token left right in
 
     (parser, expr)
@@ -139,9 +154,8 @@ module Parser = struct
 
   let parse_expr_stmt (parser : t) : (t * Ast.Stmt.t) = 
     let cur_token = parser.cur_token in
-    let precedence = cur_precedence parser in
 
-    let (parser, expr) = parse_expr parser precedence in
+    let (parser, expr) = parse_expr parser Token.LOWEST in
 
     let stmt = Ast.Stmt.Expression (Ast.ExpressionStmt.init cur_token expr) in
 
@@ -184,11 +198,10 @@ module Parser = struct
     let stmt_token = parser.cur_token in
     let parser = next_token parser in
     let id_token = parser.cur_token in 
-    let expr =  Ast.Expression.init parser.cur_token in 
+    let (parser, expr) = parse_expr parser Token.LOWEST in 
 
     let stmt = Ast.Stmt.init stmt_token id_token expr in
-
-    let parser = skip_until parser Token.Semicolon in
+    let parser = next_token_if parser Token.Semicolon in
 
     (parser, stmt)
   ;;

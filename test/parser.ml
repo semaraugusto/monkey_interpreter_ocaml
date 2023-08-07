@@ -303,6 +303,63 @@ let expected_precedence_stmt: program = [
             (Expression.init (Token.init Token.Int "4"))
             (Expression.init (Token.init Token.Int "5"))))
   };
+  Stmt.Expression {
+    token = Token.init Token.Int "1";
+    expr = 
+      (Expression.init_infix 
+        (Token.init Token.Plus "+") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Int "1"))
+          (Expression.init_infix 
+            (Token.init Token.Plus "+") 
+            (Expression.init (Token.init Token.Int "2"))
+            (Expression.init (Token.init Token.Int "3"))))) 
+
+        (Expression.init (Token.init Token.Int "4"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.LParen "(";
+    expr = 
+      (Expression.init_infix 
+        (Token.init Token.Asterisk "*") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Int "5"))
+          (Expression.init (Token.init Token.Int "5")))
+        (Expression.init (Token.init Token.Int "2")))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Int "2";
+    expr = 
+      (Expression.init_infix 
+        (Token.init Token.Slash "/") 
+        (Expression.init (Token.init Token.Int "2")))
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Int "5"))
+          (Expression.init (Token.init Token.Int "5")))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Minus "-";
+    expr = 
+      (Expression.init_prefix 
+        (Token.init Token.Minus "-") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Int "5"))
+          (Expression.init (Token.init Token.Int "5"))))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Bang "!";
+    expr = 
+      (Expression.init_prefix 
+        (Token.init Token.Bang "!") 
+        (Expression.init_infix 
+          (Token.init Token.Eq "==") 
+          (Expression.init (Token.init Token.True "true"))
+          (Expression.init (Token.init Token.True "true"))))
+  };
 ];;
 
 let expected_boolean_stmt: program = [
@@ -448,6 +505,7 @@ false == false;" in
 ;;
 
 let _test_precedence_expr_parser () = 
+  (* let code = "(5 + 5) * 2" in *)
   let code = "-a * b
 !-a
 a + b + c
@@ -459,7 +517,12 @@ a + b * c + d / e - f
 3 + 4; -5 * 6
 5 > 4 == 3 < 4
 5 < 4 != 3 > 4
-3 + 4 * 5 == 3 * 1 + 4 * 5" in
+3 + 4 * 5 == 3 * 1 + 4 * 5
+1 + (2 + 3) + 4;
+(5 + 5) * 2;
+2 / (5 + 5);
+-(5 + 5);
+!(true == true);" in
 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 

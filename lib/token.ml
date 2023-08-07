@@ -101,6 +101,7 @@ module Token = struct
   | Minus -> SUM
   | Slash
   | Asterisk -> PRODUCT
+  | LParen -> CALL
   | _ -> LOWEST
   (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *)
   ;;
