@@ -10,7 +10,7 @@ let rec cmp lst1 lst2 =
     if is_equal then
             cmp t tt
     else
-      let error = Printf.sprintf "\n(%s)\n  is not equal to \n(%s)" (Stmt.string_of h) (Stmt.string_of hh) in 
+      let error = Printf.sprintf "\n\n(%s)\n\n is not equal to \n\n(%s)\n\n" (Stmt.string_of h) (Stmt.string_of hh) in 
       (* let error = Printf.sprintf "\n(%s)\n  is not equal to \n" (Stmt.string_of h) in  *)
       failwith error
 ;;
@@ -110,7 +110,11 @@ let expected_infix_stmt: program = [
 let expected_precedence_stmt: program = [
   Stmt.Expression {
     token = Token.init Token.Minus "-";
-    expr = Expression.init_infix (Token.init Token.Asterisk "*") (Expression.init_prefix (Token.init Token.Minus "-") (Expression.init (Token.init Token.Ident "a"))) (Expression.init (Token.init Token.Ident "b"))
+    expr = Expression.init_infix 
+      (Token.init Token.Asterisk "*") 
+      (Expression.init_prefix (Token.init Token.Minus "-") 
+        (Expression.init (Token.init Token.Ident "a"))) 
+      (Expression.init (Token.init Token.Ident "b"))
   };
   Stmt.Expression {
     token = Token.init Token.Bang "!";
@@ -131,6 +135,141 @@ let expected_precedence_stmt: program = [
           (Expression.init (Token.init Token.Ident "a"))
           (Expression.init (Token.init Token.Ident "b")))
         (Expression.init (Token.init Token.Ident "c"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Minus "-") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Ident "a"))
+          (Expression.init (Token.init Token.Ident "b")))
+        (Expression.init (Token.init Token.Ident "c"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Asterisk "*") 
+        (Expression.init_infix 
+          (Token.init Token.Asterisk "*") 
+          (Expression.init (Token.init Token.Ident "a"))
+          (Expression.init (Token.init Token.Ident "b")))
+        (Expression.init (Token.init Token.Ident "c"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Slash "/") 
+        (Expression.init_infix 
+          (Token.init Token.Asterisk "*") 
+          (Expression.init (Token.init Token.Ident "a"))
+          (Expression.init (Token.init Token.Ident "b")))
+        (Expression.init (Token.init Token.Ident "c"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Plus "+") 
+        (Expression.init (Token.init Token.Ident "a"))
+        (Expression.init_infix 
+          (Token.init Token.Slash "/") 
+          (Expression.init (Token.init Token.Ident "b"))
+          (Expression.init (Token.init Token.Ident "c")))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Minus "-") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init_infix 
+            (Token.init Token.Plus "+") 
+            (Expression.init (Token.init Token.Ident "a"))
+            (Expression.init_infix 
+              (Token.init Token.Asterisk "*") 
+              (Expression.init (Token.init Token.Ident "b"))
+              (Expression.init (Token.init Token.Ident "c"))))
+          (Expression.init_infix 
+            (Token.init Token.Slash "/") 
+            (Expression.init (Token.init Token.Ident "d"))
+            (Expression.init (Token.init Token.Ident "e"))))
+          (Expression.init (Token.init Token.Ident "f"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Int "3";
+    expr = Expression.init_infix 
+      (Token.init Token.Plus "+") 
+      (Expression.init (Token.init Token.Int "3"))
+      (Expression.init (Token.init Token.Int "4"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Minus "-";
+    expr = Expression.init_infix 
+      (Token.init Token.Asterisk "*") 
+      (Expression.init_prefix 
+        (Token.init Token.Minus "-")
+        (Expression.init (Token.init Token.Int "5")))
+      (Expression.init (Token.init Token.Int "6"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Int "5";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Eq "==")
+        (Expression.init_infix 
+          (Token.init Token.GT ">") 
+          (Expression.init (Token.init Token.Int "5"))
+          (Expression.init (Token.init Token.Int "4")))
+        (Expression.init_infix 
+          (Token.init Token.LT "<") 
+          (Expression.init (Token.init Token.Int "3"))
+          (Expression.init (Token.init Token.Int "4")))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Int "5";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.NotEq "!=")
+        (Expression.init_infix 
+          (Token.init Token.LT "<") 
+          (Expression.init (Token.init Token.Int "5"))
+          (Expression.init (Token.init Token.Int "4")))
+        (Expression.init_infix 
+          (Token.init Token.GT ">") 
+          (Expression.init (Token.init Token.Int "3"))
+          (Expression.init (Token.init Token.Int "4")))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Int "3";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Eq "==")
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Int "3"))
+          (Expression.init_infix 
+            (Token.init Token.Asterisk "*") 
+            (Expression.init (Token.init Token.Int "4"))
+            (Expression.init (Token.init Token.Int "5"))))
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init_infix 
+            (Token.init Token.Asterisk "*") 
+            (Expression.init (Token.init Token.Int "3"))
+            (Expression.init (Token.init Token.Int "1")))
+          (Expression.init_infix 
+            (Token.init Token.Asterisk "*") 
+            (Expression.init (Token.init Token.Int "4"))
+            (Expression.init (Token.init Token.Int "5"))))
+        (* (Expression.init_infix  *)
+        (*   (Token.init Token.GT ">")  *)
+        (*   (Expression.init (Token.init Token.Int "3")) *)
+        (*   (Expression.init (Token.init Token.Int "4"))) *)
   };
 ];;
 
@@ -250,30 +389,27 @@ let _test_infix_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
-(* let _test_precedence_expr_parser () =  *)
-(*   let code = "-a * b;" in  *)
-(*   let parser = Monkey.Parser.init code in  *)
-(*   let program = Monkey.Parser.parse_program parser [] in  *)
-(*   print_endline "actual_program"; *)
-(*   print_endline "___________________-"; *)
-(*   let () = Monkey.print_program program in  *)
-(*   print_endline "___________________-"; *)
-(**)
-(*   (* print_endline "___________________-"; *) *)
-(*   (* (* let () = match program with  *) *) *)
-(*   (* (* | [] -> print_endline "empty program" *) *) *)
-(*   (* (* | hd :: _tl -> print_endline (Stmt.string_of hd) in *) *) *)
-(*   print_endline "expected_program"; *)
-(*   print_endline "___________________-"; *)
-(*   let () = Monkey.print_program expected_precedence_stmt in  *)
-(*   print_endline "___________________-"; *)
-(*   let is_equal = cmp program expected_infix_stmt in *)
-(*   Alcotest.(check bool) "is_equal" true is_equal;; *)
-(* ;; *)
 let _test_precedence_expr_parser () = 
-  let code = "-a * b;
-!-a;
-a + b + c;" in 
+(*   let code = "-a * b; *)
+(* !-a; *)
+(* a + b + c; *)
+(* a + b - c; *)
+(* a * b * c; *)
+(* a * b / c; *)
+(* a + b / c;" in  *)
+  let code = "-a * b
+!-a
+a + b + c
+a + b - c
+a * b * c
+a * b / c
+a + b / c
+a + b * c + d / e - f
+3 + 4; -5 * 6
+5 > 4 == 3 < 4
+5 < 4 != 3 > 4
+3 + 4 * 5 == 3 * 1 + 4 * 5" in
+
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   print_endline "actual_program";
@@ -281,10 +417,6 @@ a + b + c;" in
   let () = Monkey.print_program program in 
   print_endline "___________________-";
 
-  (* print_endline "___________________-"; *)
-  (* (* let () = match program with  *) *)
-  (* (* | [] -> print_endline "empty program" *) *)
-  (* (* | hd :: _tl -> print_endline (Stmt.string_of hd) in *) *)
   print_endline "expected_program";
   print_endline "___________________-";
   let () = Monkey.print_program expected_precedence_stmt in 
@@ -308,10 +440,6 @@ let _test_plus_expr_parser () =
   let () = Monkey.print_program program in 
   print_endline "___________________-";
 
-  (* print_endline "___________________-"; *)
-  (* (* let () = match program with  *) *)
-  (* (* | [] -> print_endline "empty program" *) *)
-  (* (* | hd :: _tl -> print_endline (Stmt.string_of hd) in *) *)
   print_endline "expected_program";
   print_endline "___________________-";
   let () = Monkey.print_program expected_precedence_stmt in 
@@ -320,8 +448,6 @@ let _test_plus_expr_parser () =
   let () = match strings with 
   | [] -> print_endline "empty program"
   | hd :: _tl -> (print_endline hd) in
-  print_endline "___________________-";
-  print_endline "___________________-";
   let is_equal = cmp program expected_plus_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -349,7 +475,7 @@ let () =
       Alcotest.test_case "integer_expr" `Quick _test_integer_expr_parser;
       Alcotest.test_case "prefix_expr" `Quick _test_prefix_expr_parser;
       Alcotest.test_case "infix_expr" `Quick _test_infix_expr_parser;
-      (* Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser; *)
+      Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser;
       Alcotest.test_case "plus_expr" `Quick _test_plus_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];

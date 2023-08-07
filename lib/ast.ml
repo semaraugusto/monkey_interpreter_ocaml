@@ -114,34 +114,21 @@ end = struct
   }
 
   let init token left right = 
-    print_endline "-----------------------";
-    print_endline "Starting infix init";
-    print_endline (Token.string_of token);
-    print_endline (Expression.string_of left);
-    print_endline (Expression.string_of right);
-    print_endline "END";
-    print_endline "-----------------------";
     {token; left; operator = token.literal; right;}
-    (* {left; operator = token.literal; right;} *)
 
   let string_of expr = 
     Printf.sprintf "InfixStmt: (%s <-> operator=\'%s\' <-> %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
+
 
   let print expr = 
     Printf.sprintf "(%s \'%s\' %s)" (Expression.print expr.left) expr.operator (Expression.print expr.right)
 
   let eq a b = 
-    (* let is_token_eq = Token.eq a.token b.token in *)
-    (* Printf.printf "token: %s == %s: %b" (Token.string_of a.token) (Token.string_of b.token) is_token_eq; *)
     let is_left_eq = Expression.eq a.left b.left in
-    Printf.printf "left: %s == %s: %b" (Expression.string_of a.left) (Expression.string_of b.left) is_left_eq;
     let is_operator_eq = a.operator = b.operator in
-    Printf.printf "operator: %s == %s: %b" a.operator b.operator is_operator_eq;
     let is_right_eq = Expression.eq a.right b.right in
-    Printf.printf "right: %s == %s: %b" (Expression.string_of a.right) (Expression.string_of b.right) is_right_eq;
 
     is_left_eq && is_operator_eq && is_right_eq
-    (* is_token_eq && is_left_eq && is_operator_eq && is_right_eq *)
 
 end
 and Expression : sig

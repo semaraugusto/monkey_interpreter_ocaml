@@ -83,44 +83,41 @@ module Token = struct
   (* let prefixPrecedence = 7 *)
   (* let lowest = 1 *)
 
-  (* type precedence =  *)
-  (*   | CALL *)
-  (*   | PREFIX *)
-  (*   | PRODUCT *)
-  (*   | SUM *)
-  (*   | LESSGREATER *)
-  (*   | EQUALS *)
-  (*   | LOWEST *)
-  (* [@@deriving show] *)
-  (* let precedence (tok : t_type) : precedence = match tok with *)
-  (* | Eq *)
-  (* | NotEq -> EQUALS *)
-  (* | LT *)
-  (* | GT -> LESSGREATER *)
-  (* | Plus *)
-  (* | Minus -> SUM *)
-  (* | Slash *)
-  (* | Asterisk -> PRODUCT *)
-  (* | Bang (* TODO: REMOVE THIS?? *) *)
-  (* | Int *)
-  (* (* | Ident -> LOWEST *) *)
-  (* | _ -> LOWEST *)
-  (* (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *) *)
-  (* ;; *)
+  type precedence = 
+    | LOWEST
+    | EQUALS
+    | LESSGREATER
+    | SUM
+    | PRODUCT
+    | PREFIX
+    | CALL
+  [@@deriving show]
+  let precedence (tok : t_type) : precedence = match tok with
+  | Eq
+  | NotEq -> EQUALS
+  | LT
+  | GT -> LESSGREATER
+  | Plus
+  | Minus -> SUM
+  | Slash
+  | Asterisk -> PRODUCT
+  | _ -> LOWEST
+  (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *)
+  ;;
   let prefixPrecedence = 7
   let lowest = 1
 
-  let precedence (t_type : t_type) = match t_type with
-  | Eq
-  | NotEq -> 2
-  | LT
-  | GT -> 3
-  | Plus
-  | Minus -> 4
-  | Slash
-  | Asterisk -> 5
-  | LParen -> 6
-  | _ -> lowest
+  (* let precedence (t_type : t_type) = match t_type with *)
+  (* | Eq *)
+  (* | NotEq -> 2 *)
+  (* | LT *)
+  (* | GT -> 3 *)
+  (* | Plus *)
+  (* | Minus -> 4 *)
+  (* | Slash *)
+  (* | Asterisk -> 5 *)
+  (* | LParen -> 6 *)
+  (* | _ -> lowest *)
 
   let precedence_of (tok : t) = 
     precedence tok.t_type
@@ -132,14 +129,14 @@ module Token = struct
     compare a_prec b_prec
   ;;
 
-  (* let string_of_precedence = function *)
-  (*   | LOWEST -> "LOWEST" *)
-  (*   | EQUALS -> "EQUALS" *)
-  (*   | LESSGREATER -> "LESSGREATER" *)
-  (*   | SUM -> "SUM" *)
-  (*   | PRODUCT -> "PRODUCT" *)
-  (*   | PREFIX -> "PREFIX" *)
-  (*   | CALL -> "CALL" *)
+  let string_of_precedence = function
+    | LOWEST -> "LOWEST"
+    | EQUALS -> "EQUALS"
+    | LESSGREATER -> "LESSGREATER"
+    | SUM -> "SUM"
+    | PRODUCT -> "PRODUCT"
+    | PREFIX -> "PREFIX"
+    | CALL -> "CALL"
 
 
 
