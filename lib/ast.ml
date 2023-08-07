@@ -1,5 +1,41 @@
 include Token
 
+module Boolean = struct
+  type t = {
+    token : Token.t;
+    value : bool;
+  }
+  [@@deriving show]
+
+  let of_token (token : Token.t) = 
+    match token.literal with 
+    "true" -> {token; value = true}
+    | "false" -> {token; value = false}
+    | _ -> 
+      let error_msg = Printf.sprintf "cannot init Boolean with token %s" token.literal in
+      failwith error_msg
+  ;;
+
+  let eq (a : t) (b : t) : bool = 
+    Printf.printf "a: {Token: (%s) value: %s}" (Token.string_of a.token) (string_of_bool a.value);
+    Printf.printf "b: {Token: (%s) value: %s}" (Token.string_of a.token) (string_of_bool a.value);
+    print_endline "eq";
+    print_endline (string_of_bool (Token.eq a.token b.token));
+    print_endline (string_of_bool (a.value = b.value));
+    match (a, b) with
+      | ({token = a_token; value = a_value}, {token = b_token; value = b_value}) -> 
+        (Token.eq a_token b_token) && (a_value = b_value)
+  ;;
+
+  let string_of b = string_of_bool b.value;;
+
+  let string_of_complete id = 
+    Printf.sprintf "Boolean: {Token: (%s) value: %s}" (Token.string_of id.token) (string_of_bool id.value)
+  ;;
+  let print stmt = 
+    Printf.sprintf "%b" stmt.value
+  ;;
+end
 
 module Identifier = struct
   type t = {
@@ -133,6 +169,7 @@ end = struct
 end
 and Expression : sig
   type t = 
+    | Boolean of Boolean.t
     | Identifier of Identifier.t
     | Integer of Integer.t
     | Prefix of Prefix.t
@@ -148,6 +185,7 @@ and Expression : sig
     val init_infix : Token.t -> t -> t -> t;;
 end = struct 
   type t = 
+    | Boolean of Boolean.t
     | Identifier of Identifier.t
     | Integer of Integer.t
     | Prefix of Prefix.t
@@ -158,6 +196,8 @@ end = struct
     match token.t_type with 
       | Token.Ident -> Identifier (Identifier.of_token token)
       | Token.Int -> Integer (Integer.of_token token)
+      | Token.False
+      | Token.True -> Boolean (Boolean.of_token token)
       | Token.Bang -> failwith "Should not be here"
       | Token.Minus -> failwith "Should not be here"
       | _ -> failwith ("cannot init Expression with token" ^ Token.string_of token)
@@ -187,6 +227,7 @@ end = struct
   ;;
 
   let string_of expr = match expr with
+    | Boolean expr -> "Expression.Boolean: " ^ Boolean.string_of expr
     | Identifier expr -> "Expression.Identifier: " ^ Identifier.string_of expr
     | Integer expr -> "Expression.Integer: " ^ Integer.string_of expr
     | Prefix expr -> "Expression.Prefix: " ^ Prefix.string_of expr
@@ -194,6 +235,7 @@ end = struct
   ;;
 
   let print expr = match expr with
+    | Boolean expr -> Boolean.print expr
     | Identifier expr -> Identifier.print expr
     | Integer expr -> Integer.print expr
     | Prefix expr -> Prefix.print expr
@@ -207,6 +249,7 @@ end = struct
   let eq a b = 
     (* let () = Printf.printf "EQAUSL{???: %s %s\n" (string_of a) (string_of b) in *)
     match (a, b) with 
+      | (Boolean a, Boolean b) -> Boolean.eq a b
       | (Identifier a, Identifier b) -> Identifier.eq a b
       | (Integer a, Integer b) -> Integer.eq a b
       | (Prefix a, Prefix b) -> Prefix.eq a b

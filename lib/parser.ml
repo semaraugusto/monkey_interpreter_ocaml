@@ -41,6 +41,14 @@ module Parser = struct
     let token = parser.cur_token in
     (parser, (Ast.Expression.init token))
   ;;
+  let parse_boolean (parser : t) : (t * Ast.Expression.t) =
+    assert ((cur_token_is parser Token.True) || (cur_token_is parser Token.False));
+    
+    let token = parser.cur_token in
+    let () = print_endline ("integer_parsing: " ^ Token.string_of token) in 
+    let token = parser.cur_token in
+    (parser, (Ast.Expression.init token))
+  ;;
 
   let parse_identifier (parser : t) : (t * Ast.Expression.t) =
     assert (cur_token_is parser Token.Ident);
@@ -100,6 +108,8 @@ module Parser = struct
   prefix (parser : t) : (t * Expression.t) = match parser.cur_token.t_type with 
     | Token.Ident -> parse_identifier parser
     | Token.Int -> parse_integer parser
+    | Token.True
+    | Token.False -> parse_boolean parser
     | Token.Bang
     | Token.Minus -> parse_prefix_expr parser
     | _ -> failwith "prefix not found"
