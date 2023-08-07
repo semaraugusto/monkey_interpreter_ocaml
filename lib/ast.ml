@@ -100,6 +100,7 @@ module rec Expression : sig
     | Prefix of Prefix.t
     | Infix of Infix.t
     | If of If.t
+    | Function of Function.t
   [@@deriving show]
 
     val init : Token.t -> t
@@ -112,6 +113,7 @@ module rec Expression : sig
     (* val init_if : Token.t -> t -> BlockStmt.t -> BlockStmt.t -> t;; *)
     val init_if : Token.t -> t -> BlockStmt.t -> t;;
     val init_if_else : Token.t -> t -> BlockStmt.t -> BlockStmt.t -> t;;
+    val init_function : Token.t -> Identifier.t list -> BlockStmt.t -> t;;
 
 end = struct 
   type t = 
@@ -121,6 +123,7 @@ end = struct
     | Prefix of Prefix.t
     | Infix of Infix.t
     | If of If.t
+    | Function of Function.t
   [@@deriving show]
 
   let init (token : Token.t) = 
@@ -142,6 +145,12 @@ end = struct
       | _ -> failwith ("cannot init PrefixExpression with token" ^ Token.string_of token)
     (* Identifier (Identifier.of_token id) *)
   ;;
+
+  let init_function (token : Token.t) (params: Identifier.t list) (body : BlockStmt.t) : t =
+    match token.t_type with 
+      | Token.Function -> Function (Function.init token params body)
+      | _ -> failwith ("cannot init FunctionExpression with token" ^ Token.string_of token)
+
 
   let init_infix (token : Token.t) (left: t) (right : t) : t =
     match token.t_type with 
@@ -178,6 +187,7 @@ end = struct
     | Prefix expr -> "Expression.Prefix: " ^ Prefix.string_of expr
     | Infix expr -> "Expression.Infix: " ^ Infix.string_of expr
     | If expr -> "Expression.If: " ^ If.string_of expr
+    | Function expr -> "Expression.Function: " ^ Function.string_of expr
   ;;
 
   let print expr = match expr with
@@ -187,6 +197,7 @@ end = struct
     | Prefix expr -> Prefix.print expr
     | Infix expr -> Infix.print expr
     | If expr -> If.print expr
+    | Function expr -> Function.string_of expr
   ;;
 
   let init_integer i = 
@@ -202,6 +213,7 @@ end = struct
       | (Prefix a, Prefix b) -> Prefix.eq a b
       | (Infix a, Infix b) -> Infix.eq a b
       | (If a, If b) -> If.eq a b
+      | (Function a, Function b) -> Function.eq a b
       | _ -> false
     (* a = b *)
   ;;
@@ -280,6 +292,35 @@ end = struct
     let is_right_eq = Expression.eq a.right b.right in
 
     is_left_eq && is_operator_eq && is_right_eq
+
+end
+and Function : sig
+  type t = {
+    token : Token.t;
+    parameters : Identifier.t list;
+    body : BlockStmt.t;
+  };;
+  val string_of : t -> string
+  val eq : t -> t -> bool
+  val init : Token.t -> Identifier.t list -> BlockStmt.t -> t
+end = struct 
+  type t = {
+    token : Token.t;
+    parameters : Identifier.t list;
+    body : BlockStmt.t;
+  };;
+  let init token parameters body = 
+    {token; parameters; body;}
+  ;;
+  let string_of expr = 
+    Printf.sprintf "%s ( ) { %s }" (Token.string_of expr.token) (BlockStmt.string_of expr.body)
+
+  let eq a b = 
+    let is_token_eq = Token.eq a.token b.token in
+    let is_parameters_eq = List.for_all2 Identifier.eq a.parameters b.parameters in
+    let is_body_eq = BlockStmt.eq a.body b.body in
+    is_token_eq && is_parameters_eq && is_body_eq
+  ;;
 
 end
 and If : sig

@@ -65,12 +65,35 @@ module Parser = struct
     | false -> failwith ("failed to parse statement. Expected: " ^ (Token.string_of_t_type t_type) ^ " got: " ^ Token.string_of_t_type parser.peek_token.t_type)
   ;;
 
+  let rec parse_parameters parser (parameters: Identifier.t list) : (t * Ast.Identifier.t list) = 
+    match peek_token_is parser Token.Comma with
+    true -> 
+      let parser = next_token parser in 
+      let parser = next_token parser in 
+      let id = Identifier.of_token parser.cur_token in
+      parse_parameters parser  (id :: parameters)
+  | false -> 
+      let parser = next_token_if parser Token.RParen in
+      (parser, List.rev parameters)
+  ;;
+  let parse_function_parameters parser : (t * Ast.Identifier.t list) = 
+    match peek_token_is parser Token.RParen with
+      true -> 
+        let parser = next_token parser in
+        (parser, [])
+    | false -> 
+        let parser = next_token parser in
+        let parameters = [Identifier.of_token parser.cur_token] in
+        parse_parameters parser parameters
+  ;;
+
   let cur_precedence (parser : t) = 
     Token.precedence_of parser.cur_token
   ;;
   let peek_precedence (parser : t) = 
     Token.precedence_of parser.peek_token
   ;;
+
 
   let rec parse_expr (parser : t) (precedence: Token.precedence) :  (t * Expression.t) = 
     let (parser, left) = prefix parser in
@@ -150,7 +173,7 @@ module Parser = struct
     let expr = Ast.Expression.init_prefix prefix_token right in
     (parser, expr)
   and
-  (* parse_block_statement parser : BlockStmt.t =  *)
+  (* parse_block_stmt parser : BlockStmt.t =  *)
   parse_block_loop parser (token : Token.t) (statements : Stmt.t list) : (t * BlockStmt.t) = 
     Printf.printf "---------------- statements: \n";
     print_program statements;
@@ -164,19 +187,28 @@ module Parser = struct
         let block = BlockStmt.init token statements in
         (parser, block)
   and
-  parse_block_statement parser : (t * BlockStmt.t) = 
+  parse_block_stmt parser : (t * BlockStmt.t) = 
     let parser = next_token parser in
     let token = parser.cur_token in
 
     let (parser, block) = parse_block_loop parser token [] in
     (parser, block)
   and
+  parse_function_literal parser : (t * Ast.Expression.t) = 
+    let token = parser.cur_token in
+    let parser = next_token parser in
+    let parser, parameters = parse_function_parameters parser in
+    let parser = next_token_if parser Token.LBrace in
+    let parser, body = parse_block_stmt parser in
+    let literal = Ast.Expression.init_function token parameters body in
+    (parser, literal)
+  and
   parse_if_expr parser : (t * Expression.t) = 
     let _if_token = parser.cur_token in
     let parser = next_token parser in
     let (parser, condition) = parse_expr parser Token.LOWEST in
     let parser = next_token_if parser Token.LBrace in
-    let (parser, consequence) = parse_block_statement parser in
+    let (parser, consequence) = parse_block_stmt parser in
     match peek_token_is parser Token.Else with 
       false ->
         let expr = Expression.init_if _if_token condition consequence in
@@ -184,7 +216,7 @@ module Parser = struct
     | true -> 
         let parser = next_token parser in
         let parser = next_token_if parser Token.LBrace in
-        let (parser, alternative) = parse_block_statement parser in
+        let (parser, alternative) = parse_block_stmt parser in
       
         let expr = Expression.init_if_else _if_token condition consequence alternative in
         (parser, expr)
@@ -212,6 +244,7 @@ module Parser = struct
     | Token.Minus -> parse_prefix_expr parser
     | Token.LParen -> parse_grouped_expr parser
     | Token.If -> parse_if_expr parser
+    | Token.Function -> parse_function_literal parser
     | _ -> failwith "prefix not found"
   
   and
@@ -245,44 +278,6 @@ module Parser = struct
         let parser = next_token parser in
         skip_until parser t_type
   ;;
-
-  (* let parse_let_stmt parser =  *)
-  (*   let stmt_token = parser.cur_token in  *)
-  (**)
-  (*   let parser = next_token_if parser Token.Ident in *)
-  (**)
-  (*   let id_token = parser.cur_token in  *)
-  (**)
-  (*   let parser = next_token_if parser Token.Assign in *)
-  (**)
-  (*   (* (* Ignore assign token *) *) *)
-  (*   let parser = next_token parser in *)
-  (**)
-  (*   let (parser, expr) = parse_expr parser Token.LOWEST in  *)
-  (**)
-  (*   let stmt = Ast.Stmt.init stmt_token id_token expr in *)
-  (*   let parser = next_token_if parser Token.Semicolon in *)
-  (**)
-  (*   (parser, stmt) *)
-  (* ;; *)
-  (**)
-  (* let parse_return_stmt parser =  *)
-  (*   let stmt_token = parser.cur_token in *)
-  (*   let parser = next_token parser in *)
-  (*   let id_token = parser.cur_token in  *)
-  (*   let (parser, expr) = parse_expr parser Token.LOWEST in  *)
-  (**)
-  (*   let stmt = Ast.Stmt.init stmt_token id_token expr in *)
-  (*   let parser = next_token_if parser Token.Semicolon in *)
-  (**)
-  (*   (parser, stmt) *)
-  (* ;; *)
-  (**)
-  (* let parse_stmt parser = match parser.cur_token with *)
-  (*   | {t_type = Token.Let; _} -> parse_let_stmt parser *)
-  (*   | {t_type = Token.Return; _} -> parse_return_stmt parser *)
-  (*   | _ -> parse_expr_stmt parser *)
-  (* ;; *)
 
   let rec parse_program parser program = 
     let cur = parser.cur_token.t_type in 
