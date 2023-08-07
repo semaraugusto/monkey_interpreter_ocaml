@@ -77,12 +77,39 @@ module Parser = struct
   ;;
 
 
-  let rec parse_prefix parser = 
+  (* let rec parse_prefix parser =  *)
+  (*   let prefix_token = parser.cur_token in *)
+  (*   let parser = next_token parser in *)
+  (*   (* parse right expression *) *)
+  (*   Printf.printf "prefix: infix_token: %s\n" (Token.string_of prefix_token); *)
+  (*   Printf.printf "prefix: cur_token: %s\n" (Token.string_of parser.cur_token); *)
+  (*   let (parser, right) = prefix_fn parser parser.cur_token in *)
+  (*   (* let parser = next_token_if parser Token.Semicolon in *) *)
+  (*   match peek_token_is parser Token.Semicolon with  *)
+  (*   true -> ( *)
+  (*     let expr = Ast.Expression.init_prefix prefix_token right in *)
+  (*     (parser, expr) *)
+  (*   ) *)
+  (*   | false -> ( *)
+  (*     let parser = next_token parser in *)
+  (*     let expr = Ast.Expression.init_prefix prefix_token right in *)
+  (*     (parser, expr) *)
+  (*   ) *)
+  (*   and  *)
+  (*   prefix_fn parser (tok : Token.t) = match tok.t_type with  *)
+  (*     | Token.Int -> parse_integer parser *)
+  (*     | Token.Ident -> parse_identifier parser *)
+  (*     | Token.Bang -> parse_prefix parser *)
+  (*     | Token.Minus -> parse_prefix parser *)
+  (*     | _ -> failwith ("failed to parse prefix expr") *)
+  (* ;; *)
+  let parse_prefix parser = 
     let prefix_token = parser.cur_token in
     let parser = next_token parser in
     (* parse right expression *)
-    let (parser, right) = prefix_fn parser parser.cur_token in
-    (* let parser = next_token_if parser Token.Semicolon in *)
+    Printf.printf "prefix: infix_token: %s\n" (Token.string_of prefix_token);
+    Printf.printf "prefix: cur_token: %s\n" (Token.string_of parser.cur_token);
+    let (parser, right) = parse_expr parser parser.cur_token in
     match peek_token_is parser Token.Semicolon with 
     true -> (
       let expr = Ast.Expression.init_prefix prefix_token right in
@@ -93,67 +120,61 @@ module Parser = struct
       let expr = Ast.Expression.init_prefix prefix_token right in
       (parser, expr)
     )
-    and 
-    prefix_fn parser (tok : Token.t) = match tok.t_type with 
-      | Token.Int -> parse_integer parser
-      | Token.Ident -> parse_identifier parser
-      | Token.Bang -> parse_prefix parser
-      | Token.Minus -> parse_prefix parser
-      | _ -> failwith ("failed to  parse prefix expr")
   ;;
 
-  let rec parse_infix parser left = 
+  let parse_infix parser left = 
     let infix_token = parser.cur_token in
     let precedence = cur_precedence parser in
     let parser = next_token parser in
+    Printf.printf "infix: infix_token: %s\n" (Token.string_of infix_token);
+    Printf.printf "infix: cur_token: %s\n" (Token.string_of parser.cur_token);
+    Printf.printf "infix left: %s\n" (Expression.string_of left);
     let (parser, right) = parse_expr parser precedence in
     let expr = Ast.Expression.init_infix infix_token left right in
 
     (parser, expr)
+  ;;
 
-  and
-  parse_expr (parser : t) (_precedence : Token.precedence): (t * Expression.t) = 
-    print_endline "parse_expr!!!!";
-    Printf.printf "1 cur_token: %s\n" (Token.string_of parser.cur_token);
-    Printf.printf "1 peek_token: %s\n" (Token.string_of parser.peek_token);
+  let parse_expr (parser : t) (precedence : Token.precedence): (t * Expression.t) = 
     let cur_token = parser.cur_token in
-    let (parser, left) = prefix_fn parser cur_token in
-
-    Printf.printf "2 cur_token: %s\n" (Token.string_of parser.cur_token);
-    Printf.printf "2 peek_token: %s\n" (Token.string_of parser.peek_token);
+    let (parser, left) = parse_prefix parser in
     Printf.printf "left: %s\n" (Expression.string_of left);
+    Printf.printf "match peek_result: %b\n" (not (peek_token_is parser Token.Semicolon));
+    Printf.printf "precedence: %s\n" (Token.string_of_precedence precedence);
+    Printf.printf "cur_token: %s\n" (Token.string_of cur_token);
+    Printf.printf "parser.cur_token: %s\n" (Token.string_of parser.cur_token);
+    Printf.printf "peek_precedence: %s\n" (Token.string_of_precedence (peek_precedence parser));
+    (* Printf.printf "match precedence check: %b\n" (precedence < peek_precedence parser); *)
     
-    Printf.printf "peek_token is: %b\n" (peek_token_is parser Token.Semicolon);
-
-    match (not (peek_token_is parser Token.Semicolon)) &&  (_precedence < peek_precedence parser) with 
+    match (not (peek_token_is parser Token.Semicolon)) with 
+    (* match (not (peek_token_is parser Token.Semicolon)) &&  (precedence < peek_precedence parser) with  *)
     true -> (
-      Printf.printf "33333333333";
+      (* print_endline "33333333333"; *)
       let parser = next_token parser in
+      print_endline "1111111111111111111";
       let (parser, left) = parse_infix parser left in
       (parser, left)
     )
     | false -> (
+      print_endline "33333333333";
       (parser, left)
     )
   ;;
 
   let parse_expr_stmt (parser : t) : (t * Ast.Stmt.t) = 
     let cur_token = parser.cur_token in
-    print_endline ("PARSE_EXPR_STMT CUR_TOKEN: " ^ Token.string_of cur_token);
     let precedence = cur_precedence parser in
 
     let (parser, expr) = parse_expr parser precedence in
-    (* print_endline ("PARSE_EXPR_STMT PARSER.CUR_TOKEN: " ^ Token.string_of cur_token); *)
-    (* print_endline ("PARSE_EXPR_STMT PARSER.CUR_TOKEN: " ^ Token.string_of parser.cur_token); *)
-    print_endline ("PARSE_EXPR_STMT EXPR: " ^ Expression.string_of expr);
 
     let stmt = Ast.Stmt.Expression (Ast.ExpressionStmt.init cur_token expr) in
 
-    print_endline ("STATEMENT!!!!!!!!: " ^ Stmt.string_of stmt);
-
-    let parser = next_token parser in
-    (* (parser, Ast.Statatement.init  *)
-    (parser, stmt)
+    match peek_token_is parser Token.Semicolon with 
+      true -> 
+        let parser = next_token parser in
+        (parser, stmt)
+      |false -> 
+        (parser, stmt)
   ;;
 
   let rec skip_until parser t_type = match cur_token_is parser t_type with 

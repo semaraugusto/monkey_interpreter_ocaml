@@ -83,46 +83,46 @@ module Lexer = struct
         (match peek l with
           | '=' -> 
             read_char l; 
-            Token.newToken Token.Eq "=="
-          | _ -> Token.newToken Token.Assign (Char.to_string l.ch))
-    | '+' -> Token.newToken Token.Plus (Char.to_string l.ch)
-    | '-' -> Token.newToken Token.Minus (Char.to_string l.ch)
+            Token.init Token.Eq "=="
+          | _ -> Token.init Token.Assign (Char.to_string l.ch))
+    | '+' -> Token.init Token.Plus (Char.to_string l.ch)
+    | '-' -> Token.init Token.Minus (Char.to_string l.ch)
     | '!' -> 
         (match peek l with
           | '=' -> 
             read_char l; 
-            Token.newToken Token.NotEq "!="
-          | _ -> Token.newToken Token.Bang ("!"))
-    | '/' -> Token.newToken Token.Slash (Char.to_string l.ch)
-    | '*' -> Token.newToken Token.Asterisk (Char.to_string l.ch)
-    | '<' -> Token.newToken Token.LT (Char.to_string l.ch)
-    | '>' -> Token.newToken Token.GT (Char.to_string l.ch)
-    | ',' -> Token.newToken Token.Comma (Char.to_string l.ch)
-    | ';' -> Token.newToken Token.Semicolon (Char.to_string l.ch)
-    | '(' -> Token.newToken Token.LParen (Char.to_string l.ch)
-    | ')' -> Token.newToken Token.RParen (Char.to_string l.ch)
-    | '{' -> Token.newToken Token.LBrace (Char.to_string l.ch)
-    | '}' -> Token.newToken Token.RBrace (Char.to_string l.ch)
+            Token.init Token.NotEq "!="
+          | _ -> Token.init Token.Bang ("!"))
+    | '/' -> Token.init Token.Slash (Char.to_string l.ch)
+    | '*' -> Token.init Token.Asterisk (Char.to_string l.ch)
+    | '<' -> Token.init Token.LT (Char.to_string l.ch)
+    | '>' -> Token.init Token.GT (Char.to_string l.ch)
+    | ',' -> Token.init Token.Comma (Char.to_string l.ch)
+    | ';' -> Token.init Token.Semicolon (Char.to_string l.ch)
+    | '(' -> Token.init Token.LParen (Char.to_string l.ch)
+    | ')' -> Token.init Token.RParen (Char.to_string l.ch)
+    | '{' -> Token.init Token.LBrace (Char.to_string l.ch)
+    | '}' -> Token.init Token.RBrace (Char.to_string l.ch)
     |'a' .. 'z' | 'A' .. 'Z' | '_' -> 
         let literal = (read_identifier l []) in
         (match literal with 
-          "fn" -> Token.newToken Token.Function literal
-          | "let" -> Token.newToken Token.Let literal
-          | "if" -> Token.newToken Token.If literal
-          | "else" -> Token.newToken Token.Else literal
-          | "return" -> Token.newToken Token.Return literal
-          | "true" -> Token.newToken Token.True literal
-          | "false" -> Token.newToken Token.False literal
-          | _ -> Token.newToken Token.Ident literal)
+          "fn" -> Token.init Token.Function literal
+          | "let" -> Token.init Token.Let literal
+          | "if" -> Token.init Token.If literal
+          | "else" -> Token.init Token.Else literal
+          | "return" -> Token.init Token.Return literal
+          | "true" -> Token.init Token.True literal
+          | "false" -> Token.init Token.False literal
+          | _ -> Token.init Token.Ident literal)
     |'0' .. '9' -> 
         let number = (read_number l []) in
         
-        Token.newToken Token.Int number
+        Token.init Token.Int number
 
     | ' ' | '\n' -> 
         failwith "space"
     | _ -> 
-        Token.newToken Token.EOF "" in
+        Token.init Token.EOF "" in
 
     (* Token.print token;  *)
     read_char l;
@@ -132,10 +132,10 @@ module Lexer = struct
     let token = next_token lexer in
     match token.t_type with 
       | Token.EOF -> 
-        let t = Token.newToken Token.EOF "" in
+        let t = Token.init Token.EOF "" in
         List.rev (t :: result)
       | ttype -> 
-        let t = Token.newToken ttype token.literal in
+        let t = Token.init ttype token.literal in
         parse_input lexer (t :: result)
 
 end

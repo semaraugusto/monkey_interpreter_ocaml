@@ -104,7 +104,7 @@ module Token = struct
   | Asterisk -> PRODUCT
   | Bang (* TODO: REMOVE THIS?? *)
   | Int
-  | Ident -> LOWEST
+  (* | Ident -> LOWEST *)
   | _ -> LOWEST
   (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *)
   ;;
@@ -117,6 +117,15 @@ module Token = struct
     let b_prec = precedence b in
     compare a_prec b_prec
   ;;
+
+  let string_of_precedence = function
+    | LOWEST -> "LOWEST"
+    | EQUALS -> "EQUALS"
+    | LESSGREATER -> "LESSGREATER"
+    | SUM -> "SUM"
+    | PRODUCT -> "PRODUCT"
+    | PREFIX -> "PREFIX"
+    | CALL -> "CALL"
 
 
 
@@ -160,7 +169,7 @@ module Token = struct
 
   let eof = {t_type = EOF; literal = ""}
 
-  let newToken t_type literal = {t_type = t_type; literal = literal}
+  let init t_type literal = {t_type = t_type; literal = literal}
 
   let eq a b = a.literal = b.literal && a.t_type = b.t_type
 

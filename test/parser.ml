@@ -17,355 +17,131 @@ let rec cmp lst1 lst2 =
 
 let expected_let_stmt: program = [
   Stmt.Let {
-    token = {t_type = Token.Let; literal = "let"};
-    id = {token = {t_type = Token.Ident; literal = "x"}; name = "x"};
-    value = (Expression.Integer {token = {t_type = Token.Int; literal = "5"}; value = 5; });
+    token = Token.init Token.Let "let";
+    id = Identifier.of_token (Token.init Token.Ident "x");
+    value = Expression.init (Token.init Token.Int "5");
 
   };
   Stmt.Let {
-    token = {t_type = Token.Let; literal = "let"};
-    id = {token = {t_type = Token.Ident; literal = "y"}; name = "y"};
-    value = (Expression.Integer {token = {t_type = Token.Int; literal = "10"}; value = 10; });
+    token = Token.init Token.Let "let";
+    id = Identifier.of_token (Token.init Token.Ident "y");
+    value = Expression.init (Token.init Token.Int "10");
   };
   Stmt.Let {
-    token = {t_type = Token.Let; literal = "let"};
-    id = {token = {t_type = Token.Ident; literal = "foobar"}; name = "foobar"};
-    value = (Expression.Integer {token = {t_type = Token.Int; literal = "838383"}; value = 838383; });
+    token = Token.init Token.Let "let";
+    id = Identifier.of_token (Token.init Token.Ident "foobar");
+    value = Expression.init (Token.init Token.Int "838383");
   };
 ];;
 
 let expected_return_stmt: program = [
   Stmt.Return {
-    token = {t_type = Token.Return; literal = "return"};
-    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "5"}; value = 5; });
+    token = Token.init Token.Return "return";
+    expr = Expression.init (Token.init Token.Int "5");
   };
   Stmt.Return {
-    token = {t_type = Token.Return; literal = "return"};
-    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "10"}; value = 10; });
+    token = Token.init Token.Return "return";
+    expr = Expression.init (Token.init Token.Int "10");
   };
   Stmt.Return {
-    token = {t_type = Token.Return; literal = "return"};
-    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "993322"}; value = 993322; });
+    token = Token.init Token.Return "return";
+    expr = Expression.init (Token.init Token.Int "993322");
   };
 ] ;;
 
 let expected_identity_stmt: program = [
   Stmt.Expression {
-    token = {t_type = Token.Ident; literal = "foobar"};
-    expr = (Expression.Identifier {token = {t_type = Token.Ident; literal = "foobar"}; name = "foobar"});
+    token = Token.init Token.Ident "foobar";
+    expr = Expression.init (Token.init Token.Ident "foobar");
   }
 ];;
 let expected_integer_stmt: program = [
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "5"};
-    expr = (Expression.Integer {token = {t_type = Token.Int; literal = "5"}; value = 5; });
+    token = Token.init Token.Int "5";
+    expr = Expression.init (Token.init Token.Int "5");
   }
 ];;
 
-(* let expected_prefix_stmt: program = List.rev [ *)
 let expected_prefix_stmt: program = [
   Stmt.Expression {
-    token = {t_type = Token.Bang; literal = "!"};
-    expr = (
-      Expression.Prefix {
-        token = {
-          t_type = Token.Bang; 
-          literal = "!"
-        }; 
-        operator = "!"; 
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Bang "!";
+    expr = Expression.init_prefix (Token.init Token.Bang "!") (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Minus; literal = "-"};
-    expr = (
-      Expression.Prefix {
-        token = {
-          t_type = Token.Minus; 
-          literal = "-"
-        }; 
-        operator = "-"; 
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        }
-      }
-    );
+    token = Token.init Token.Minus "-";
+    expr = Expression.init_prefix (Token.init Token.Minus "-") (Expression.init (Token.init Token.Int "15"));
   };
 ];;
 
 let expected_infix_stmt: program = [
   Stmt.Expression {
-    (* token = {t_type = Token.Plus; literal = "+"}; *)
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.Plus; 
-          literal = "+"
-        }; 
-        operator = "+"; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.Plus "+") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.Minus; 
-          literal = "-"
-        }; 
-        operator = "-"; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.Minus "-") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.Asterisk; 
-          literal = "*"
-        }; 
-        operator = "*"; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.Asterisk "*") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.Slash; 
-          literal = "/"
-        }; 
-        operator = "/"; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.Slash "/") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.LT; 
-          literal = "<"
-        }; 
-        operator = "<"; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.LT "<") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.GT; 
-          literal = ">"
-        }; 
-        operator = ">"; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.GT ">") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.Eq; 
-          literal = "=="
-        }; 
-        operator = "=="; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.Eq "==") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
   Stmt.Expression {
-    token = {t_type = Token.Int; literal = "15"};
-    expr = (
-      Expression.Infix {
-        token = {
-          t_type = Token.NotEq; 
-          literal = "!="
-        }; 
-        operator = "!="; 
-        left = Expression.Integer {
-
-          token = {
-            t_type = Token.Int; 
-            literal = "15"
-          }; 
-          value = 15; 
-        };
-        right = Expression.Integer {
-          token = {
-            t_type = Token.Int; 
-            literal = "5"
-          }; 
-          value = 5; 
-        }
-      }
-    );
+    token = Token.init Token.Int "15";
+    expr = Expression.init_infix (Token.init Token.NotEq "!=") (Expression.init (Token.init Token.Int "15")) (Expression.init (Token.init Token.Int "5"));
   };
-  (* Stmt.Expression { *)
-  (*   token = {t_type = Token.Minus; literal = "5"}; *)
-  (*   expr = ( *)
-  (*     Expression.Infix { *)
-  (*       token = { *)
-  (*         t_type = Token.Minus;  *)
-  (*         literal = "-" *)
-  (*       };  *)
-  (*       operator = "-";  *)
-  (*       left = Expression.Prefix { *)
-  (*         token = { *)
-  (*           t_type = Token.Minus;  *)
-  (*           literal = "-" *)
-  (*         };  *)
-  (*         operator = "-";  *)
-  (*         right = Expression.Identifier { *)
-  (*           token = { *)
-  (*             t_type = Token.Ident;  *)
-  (*             literal = "a" *)
-  (*           };  *)
-  (*           name = "a";  *)
-  (*         } *)
-  (*       }; *)
-  (*       right = Expression.Identifier { *)
-  (*         token = { *)
-  (*           t_type = Token.Ident;  *)
-  (*           literal = "b" *)
-  (*         };  *)
-  (*         name = "b";  *)
-  (*       } *)
-  (*     } *)
-  (*   ); *)
-  (* }; *)
+];;
+let expected_precedence_stmt: program = [
+  Stmt.Expression {
+    token = Token.init Token.Asterisk "*";
+    expr = Expression.init_infix (Token.init Token.Asterisk "*") (Expression.init_prefix (Token.init Token.Minus "-") (Expression.init (Token.init Token.Ident "a"))) (Expression.init (Token.init Token.Ident "b"))
+    (* expr = ( *)
+    (*   Expression.Prefix { *)
+    (*     token = { *)
+    (*       t_type = Token.Minus;  *)
+    (*       literal = "-" *)
+    (*     };  *)
+    (*     (* operator = "-";  *) *)
+    (*     value = Expression.Prefix { *)
+    (*       token = { *)
+    (*         t_type = Token.Minus;  *)
+    (*         literal = "-" *)
+    (*       };  *)
+    (*       operator = "-";  *)
+    (*       right = Expression.Identifier { *)
+    (*         token = { *)
+    (*           t_type = Token.Ident;  *)
+    (*           literal = "a" *)
+    (*         };  *)
+    (*         name = "a";  *)
+    (*       } *)
+    (*     }; *)
+    (*     right = Expression.Identifier { *)
+    (*       token = Token.init Token.Ident "b"; *)
+    (*       name = "b";  *)
+    (*     } *)
+    (*   } *)
+    (* ); *)
+  };
 ];;
 
-(* let _test_let_stmt_parser () =  *)
-(*   let code = " *)
-(* let x = 5;" in  *)
-(*   let parser = Monkey.Parser.init code in  *)
-(*   let program = Monkey.Parser.parse_program parser [] in  *)
-(*   let () = Monkey.print_program program in  *)
-(*   let is_equal = cmp program expected_let_stmt in *)
-(*   Alcotest.(check bool) "is_equal" true is_equal *)
-(* ;; *)
+
 let _test_let_stmt_parser () = 
   let code = "
 let x = 5;
@@ -467,6 +243,23 @@ let _test_infix_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
+let _test_precedence_expr_parser () = 
+  let code = "-a * b;" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  print_endline "actual_program";
+  let () = Monkey.print_program program in 
+
+  print_endline "___________________-";
+  let () = match program with 
+  | [] -> print_endline "empty program"
+  | hd :: _tl -> print_endline (Stmt.string_of hd) in
+  print_endline "___________________-";
+  print_endline "expected_program";
+  let () = Monkey.print_program expected_precedence_stmt in 
+  let is_equal = cmp program expected_infix_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
 
 let test_parser_error () = 
         let code = "
@@ -491,6 +284,7 @@ let () =
       Alcotest.test_case "integer_expr" `Quick _test_integer_expr_parser;
       Alcotest.test_case "prefix_expr" `Quick _test_prefix_expr_parser;
       Alcotest.test_case "infix_expr" `Quick _test_infix_expr_parser;
+      Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     (* "String conversion", [  *)
