@@ -22,12 +22,7 @@ module Parser = struct
     let lexer = parser.lexer in
     let cur_token = parser.peek_token in
     let peek_token = Lexer.next_token parser.lexer in
-    { 
-      lexer; 
-      cur_token; 
-      peek_token; 
-      (* prefix_fns = parser.prefix_fns  *)
-    }
+    { lexer; cur_token; peek_token; }
   ;;
   
   let parse_integer (parser : t) : (t * Ast.Expression.t) =
@@ -52,18 +47,14 @@ module Parser = struct
     let lexer = Lexer.init code in
     let cur_token = Lexer.next_token lexer in
     let peek_token = Lexer.next_token lexer in
+    { lexer; cur_token; peek_token; }
+  ;;
 
-    { 
-      lexer; 
-      cur_token; 
-      peek_token; 
-      (* prefix_fns  *)
-    }
   let next_token_if parser (t_type : Token.t_type) = match (peek_token_is parser t_type) with
     | true -> next_token parser
-    (* | false -> failwith ("failed to parse let statement") *)
     | false -> failwith ("failed to parse statement. Expected: " ^ (Token.string_of_t_type t_type) ^ " got: " ^ Token.string_of_t_type parser.peek_token.t_type)
   ;;
+
 
   let rec parse_parameters parser (parameters: Identifier.t list) : (t * Ast.Identifier.t list) = 
     match peek_token_is parser Token.Comma with
@@ -102,6 +93,29 @@ module Parser = struct
     infix_loop parser precedence left
 
   and
+  parse_arguments parser (parameters: Expression.t list) : (t * Ast.Expression.t list) = 
+    match peek_token_is parser Token.Comma with
+    true -> 
+      let parser = next_token parser in 
+      let parser = next_token parser in 
+      (* let id = Identifier.of_token parser.cur_token in *)
+      let (parser, arg) = parse_expr parser Token.LOWEST in
+      parse_arguments parser  (arg :: parameters)
+  | false -> 
+      let parser = next_token_if parser Token.RParen in
+      (parser, List.rev parameters)
+  and
+  parse_call_arguments parser : (t * Ast.Expression.t list) = 
+    match peek_token_is parser Token.RParen with
+      true -> 
+        let parser = next_token parser in
+        (parser, [])
+    | false -> 
+        let parser = next_token parser in
+        let (parser, arg) = parse_expr parser Token.LOWEST in
+        (* let parameters = [Ast.Identifier.of_token parser.cur_token] in *)
+        parse_arguments parser [arg]
+  and
   parse_let_stmt parser = 
     let stmt_token = parser.cur_token in 
 
@@ -111,7 +125,7 @@ module Parser = struct
 
     let parser = next_token_if parser Token.Assign in
 
-    (* (* Ignore assign token *) *)
+    (* Ignore assign token *)
     let parser = next_token parser in
 
     let (parser, expr) = parse_expr parser Token.LOWEST in 
@@ -138,11 +152,6 @@ module Parser = struct
     | _ -> parse_expr_stmt parser
   and
   infix_loop (parser : t) (precedence : Token.precedence) (left: Expression.t) : (t * Expression.t) = 
-    (* Printf.printf "infix-loop : %s\nleft: %s\n" (Token.string_of parser.cur_token) (Expression.print left); *)
-    (* Printf.printf "not peek_is_semicolon : %b\n" (not (peek_token_is parser Token.Semicolon)); *)
-    (* Printf.printf "precedence : %s\n" (Token.string_of_precedence precedence); *)
-    (* Printf.printf "peek_precedence : %s\n" (Token.string_of_precedence (peek_precedence parser)); *)
-    (* Printf.printf "precedence < peek_precedence : %b\n" (precedence = peek_precedence parser); *)
     match (not (peek_token_is parser Token.Semicolon)) &&  (precedence < peek_precedence parser) with 
       true -> (
         let parser = next_token parser in
@@ -159,11 +168,7 @@ module Parser = struct
   parse_grouped_expr parser : (t * Expression.t) = 
     let parser = next_token parser in
     let (parser, right) = parse_expr parser Token.LOWEST in
-    Printf.printf "grouped : %s\nright: %s\n" (Token.string_of parser.cur_token) (Expression.print right);
     let parser = next_token_if parser Token.RParen in
-    (* ignore RParen token  *)
-    (* let parser = next_token parser in *)
-    Printf.printf "grouped cur_token : %s" (Token.string_of parser.cur_token);
     (parser, right)
   and
   parse_prefix_expr parser : (t * Expression.t) = 
@@ -175,9 +180,6 @@ module Parser = struct
   and
   (* parse_block_stmt parser : BlockStmt.t =  *)
   parse_block_loop parser (token : Token.t) (statements : Stmt.t list) : (t * BlockStmt.t) = 
-    Printf.printf "---------------- statements: \n";
-    print_program statements;
-    Printf.printf "not is RBrace %b not is EOF %b\n" (not (cur_token_is parser Token.RBrace)) ((not (cur_token_is parser Token.EOF)));
     match (not (cur_token_is parser Token.RBrace) && (not (cur_token_is parser Token.EOF))) with 
       true ->
         let (parser, stmt) = parse_stmt parser in 
@@ -202,6 +204,12 @@ module Parser = struct
     let parser, body = parse_block_stmt parser in
     let literal = Ast.Expression.init_function token parameters body in
     (parser, literal)
+  and
+  parse_call_expr parser (funct : Ast.Expression.t): (t * Expression.t) = 
+    let token = parser.cur_token in
+    let parser, arguments = parse_call_arguments parser in
+    let expr = Ast.Expression.init_call token funct arguments in
+    (parser, expr)
   and
   parse_if_expr parser : (t * Expression.t) = 
     let _if_token = parser.cur_token in
@@ -268,6 +276,7 @@ module Parser = struct
     | Token.NotEq
     | Token.LT
     | Token.GT -> parse_infix_expr parser left
+    | Token.LParen -> parse_call_expr parser left
     | _ -> failwith "infix not found"
   ;;
 

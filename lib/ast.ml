@@ -101,6 +101,7 @@ module rec Expression : sig
     | Infix of Infix.t
     | If of If.t
     | Function of Function.t
+    | Call of Call.t
   [@@deriving show]
 
     val init : Token.t -> t
@@ -114,6 +115,7 @@ module rec Expression : sig
     val init_if : Token.t -> t -> BlockStmt.t -> t;;
     val init_if_else : Token.t -> t -> BlockStmt.t -> BlockStmt.t -> t;;
     val init_function : Token.t -> Identifier.t list -> BlockStmt.t -> t;;
+    val init_call : Token.t -> Expression.t -> Expression.t list -> t;;
 
 end = struct 
   type t = 
@@ -124,6 +126,7 @@ end = struct
     | Infix of Infix.t
     | If of If.t
     | Function of Function.t
+    | Call of Call.t
   [@@deriving show]
 
   let init (token : Token.t) = 
@@ -166,6 +169,12 @@ end = struct
     (* Identifier (Identifier.of_token id) *)
   ;;
 
+  let init_call (token : Token.t) (fn: t) (arguments : t list): t =
+    match token.t_type with 
+      | Token.LParen -> Call (
+      Call.init token fn arguments)
+      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
+  ;;
   let init_if_else (token : Token.t) (condition: t) (consequence : BlockStmt.t) (alternative : BlockStmt.t) : t =
     match token.t_type with 
       | Token.If -> If (If.init_else token condition consequence alternative)
@@ -188,6 +197,7 @@ end = struct
     | Infix expr -> "Expression.Infix: " ^ Infix.string_of expr
     | If expr -> "Expression.If: " ^ If.string_of expr
     | Function expr -> "Expression.Function: " ^ Function.string_of expr
+    | Call expr -> "Expression.Call: " ^ Call.string_of expr
   ;;
 
   let print expr = match expr with
@@ -198,6 +208,7 @@ end = struct
     | Infix expr -> Infix.print expr
     | If expr -> If.print expr
     | Function expr -> Function.string_of expr
+    | Call expr -> Call.string_of expr
   ;;
 
   let init_integer i = 
@@ -214,6 +225,7 @@ end = struct
       | (Infix a, Infix b) -> Infix.eq a b
       | (If a, If b) -> If.eq a b
       | (Function a, Function b) -> Function.eq a b
+      | (Call a, Call b) -> Call.eq a b
       | _ -> false
     (* a = b *)
   ;;
@@ -292,6 +304,36 @@ end = struct
     let is_right_eq = Expression.eq a.right b.right in
 
     is_left_eq && is_operator_eq && is_right_eq
+
+end
+and Call : sig
+  type t = {
+    token : Token.t;
+    fn : Expression.t;
+    arguments : Expression.t list;
+  };;
+  val string_of : t -> string
+  val eq : t -> t -> bool
+  val init : Token.t -> Expression.t -> Expression.t list -> t
+end = struct 
+  type t = {
+    token : Token.t;
+    fn : Expression.t;
+    arguments : Expression.t list;
+  };;
+
+  let init token fn arguments = 
+    { token; fn; arguments; }
+
+  let eq a b = 
+    let is_token_eq = Token.eq a.token b.token in
+    let is_fn_equal = Expression.eq a.fn b.fn in
+    let are_arguments_equal = List.for_all2 Expression.eq a.arguments b.arguments in
+
+    is_token_eq && is_fn_equal && are_arguments_equal
+
+  let string_of expr = 
+    Printf.sprintf "%s ( ) { %s }" (Expression.string_of expr.fn) "not implemented!"
 
 end
 and Function : sig

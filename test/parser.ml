@@ -464,6 +464,18 @@ let expected_fn_stmt: program = [
   };
 ];;
 
+(* let expected_call_stmt: program = [ *)
+(*   Stmt.Expression { *)
+(*     token = Token.init Token.Ident "add"; *)
+(*     expr =  *)
+(*       (Expression.init_call  *)
+(*         (Token.init Token.Plus "+")  *)
+(*         (Expression.init_function  *)
+(*           (Token.init Token.Function "fn") *)
+(*         (* (Expression.init (Token.init Token.Ident "x")) *) *)
+(*         (Expression.init (Token.init Token.Ident "y"))) *)
+(*   }; *)
+(* ];; *)
 
 let _test_let_stmt_parser () = 
   let code = "
@@ -681,6 +693,21 @@ let _test_fn_stmt () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
+let _test_call_stmt () = 
+  let code = "add(1, 2 * 3, 4 + 5);" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  let () = Monkey.print_program program in 
+
+  let () = Monkey.print_program expected_precedence_stmt in 
+  let strings = List.map Stmt._print program in 
+  let () = match strings with 
+  | [] -> print_endline "empty program"
+  | hd :: _tl -> (print_endline hd) in
+  let is_equal = cmp program expected_fn_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
 let test_parser_error () = 
         let code = "
 let x = 5;
@@ -707,8 +734,9 @@ let () =
       Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser;
       Alcotest.test_case "plus_expr" `Quick _test_boolean_expr_parser;
       Alcotest.test_case "if" `Quick _test_if_stmt;
-      Alcotest.test_case "function" `Quick _test_fn_stmt;
       Alcotest.test_case "else" `Quick _test_else_stmt;
+      Alcotest.test_case "function" `Quick _test_fn_stmt;
+      Alcotest.test_case "call" `Quick _test_call_stmt;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     (* "String conversion", [  *)
