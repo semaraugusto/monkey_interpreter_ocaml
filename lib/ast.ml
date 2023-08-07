@@ -24,7 +24,7 @@ module Identifier = struct
     Printf.sprintf "Identifier: {Token: (%s) Name: %s}" (Token.string_of id.token) id.name
   ;;
   let print stmt = 
-    print_endline (string_of stmt)
+    Printf.sprintf "%s" stmt.name
   ;;
 end
 
@@ -51,6 +51,9 @@ module Integer = struct
   let string_of i = 
     Printf.sprintf "Integer: {Token: (%s) Value: %s}" (Token.string_of i.token) (string_of_int i.value)
   ;;
+
+  let print stmt = 
+    Printf.sprintf "%d" stmt.value
 end
 
 module rec Prefix : sig
@@ -61,6 +64,7 @@ module rec Prefix : sig
   }
   val init : Token.t -> Expression.t -> t
   val string_of : t -> string
+  val print : t -> string
   val eq : t -> t -> bool
 end = struct 
   type t = {
@@ -86,6 +90,10 @@ end = struct
   let string_of expr = 
     Printf.sprintf "(%s %s %s)" (Token.string_of expr.token) expr.operator (Expression.string_of expr.right)
   ;;
+
+  let print expr = 
+    Printf.sprintf "(\'%s\' %s)" expr.operator (Expression.print expr.right)
+
 end and Infix : sig
   type t = {
     token : Token.t;
@@ -95,6 +103,7 @@ end and Infix : sig
   }
   val init : Token.t -> Expression.t -> Expression.t -> t
   val string_of : t -> string
+  val print : t -> string
   val eq : t -> t -> bool
 end = struct 
   type t = {
@@ -117,6 +126,9 @@ end = struct
 
   let string_of expr = 
     Printf.sprintf "InfixStmt: (%s <-> operator=\'%s\' <-> %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
+
+  let print expr = 
+    Printf.sprintf "(%s \'%s\' %s)" (Expression.print expr.left) expr.operator (Expression.print expr.right)
 
   let eq a b = 
     (* let is_token_eq = Token.eq a.token b.token in *)
@@ -144,6 +156,7 @@ and Expression : sig
     val init_integer : Token.t -> t
     val eq : t -> t -> bool
     val string_of : t -> string
+    val print : t -> string
     val init_prefix : Token.t -> t -> t;;
     val init_infix : Token.t -> t -> t -> t;;
 end = struct 
@@ -193,6 +206,13 @@ end = struct
     | Infix expr -> "Expression.Infix: " ^ Infix.string_of expr
   ;;
 
+  let print expr = match expr with
+    | Identifier expr -> Identifier.print expr
+    | Integer expr -> Integer.print expr
+    | Prefix expr -> Prefix.print expr
+    | Infix expr -> Infix.print expr
+  ;;
+
   let init_integer i = 
     Integer (Integer.of_token i)
   ;;
@@ -229,6 +249,9 @@ module ExpressionStmt = struct
   ;;
   let string_of (stmt : t) = 
     Printf.sprintf "ExpressionStmt: {(%s) (%s)}" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
+  ;;
+  let print (stmt : t) = 
+    Printf.sprintf "%s" (Expression.print stmt.expr)
   ;;
 
 end
@@ -343,6 +366,12 @@ module Stmt = struct
     | Expression stmt -> "Stmt.Expression: " ^ ExpressionStmt.string_of stmt
   ;;
 
+  let _print = function
+    | Let stmt -> LetStmt.string_of stmt
+    | Return stmt -> ReturnStmt.string_of stmt
+    | Expression stmt -> ExpressionStmt.print stmt
+  ;;
+
   let eq (a : t) (b : t) : bool = 
     match (a, b) with
     | (Let a, Let b) -> LetStmt.eq a b
@@ -361,6 +390,6 @@ type program = Stmt.t list
 let rec print_program = function 
   | [] -> print_endline "PrintProgram EOF\n"
   | hd :: tl -> 
-    let stmt = Stmt.string_of hd in
+    let stmt = Stmt._print hd in
     let () = print_endline ("PrintProgram Stmt: " ^ stmt) in
     print_program tl

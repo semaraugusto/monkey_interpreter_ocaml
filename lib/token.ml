@@ -80,35 +80,49 @@ module Token = struct
   }
   [@@deriving show]
 
+  (* let prefixPrecedence = 7 *)
+  (* let lowest = 1 *)
+
+  (* type precedence =  *)
+  (*   | CALL *)
+  (*   | PREFIX *)
+  (*   | PRODUCT *)
+  (*   | SUM *)
+  (*   | LESSGREATER *)
+  (*   | EQUALS *)
+  (*   | LOWEST *)
+  (* [@@deriving show] *)
+  (* let precedence (tok : t_type) : precedence = match tok with *)
+  (* | Eq *)
+  (* | NotEq -> EQUALS *)
+  (* | LT *)
+  (* | GT -> LESSGREATER *)
+  (* | Plus *)
+  (* | Minus -> SUM *)
+  (* | Slash *)
+  (* | Asterisk -> PRODUCT *)
+  (* | Bang (* TODO: REMOVE THIS?? *) *)
+  (* | Int *)
+  (* (* | Ident -> LOWEST *) *)
+  (* | _ -> LOWEST *)
+  (* (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *) *)
+  (* ;; *)
   let prefixPrecedence = 7
   let lowest = 1
 
-  type precedence = 
-    | LOWEST
-    | EQUALS
-    | LESSGREATER
-    | SUM
-    | PRODUCT
-    | PREFIX
-    | CALL
-  [@@deriving show]
-
-  let precedence (tok : t_type) : precedence = match tok with
+  let precedence (t_type : t_type) = match t_type with
   | Eq
-  | NotEq -> EQUALS
+  | NotEq -> 2
   | LT
-  | GT -> LESSGREATER
+  | GT -> 3
   | Plus
-  | Minus -> SUM
+  | Minus -> 4
   | Slash
-  | Asterisk -> PRODUCT
-  | Bang (* TODO: REMOVE THIS?? *)
-  | Int
-  (* | Ident -> LOWEST *)
-  | _ -> LOWEST
-  (* | _ -> failwith ("could not find precedence for " ^ string_of_t_type tok) *)
-  ;;
-  let precedence_of (tok : t) : precedence = 
+  | Asterisk -> 5
+  | LParen -> 6
+  | _ -> lowest
+
+  let precedence_of (tok : t) = 
     precedence tok.t_type
   ;;
 
@@ -118,14 +132,14 @@ module Token = struct
     compare a_prec b_prec
   ;;
 
-  let string_of_precedence = function
-    | LOWEST -> "LOWEST"
-    | EQUALS -> "EQUALS"
-    | LESSGREATER -> "LESSGREATER"
-    | SUM -> "SUM"
-    | PRODUCT -> "PRODUCT"
-    | PREFIX -> "PREFIX"
-    | CALL -> "CALL"
+  (* let string_of_precedence = function *)
+  (*   | LOWEST -> "LOWEST" *)
+  (*   | EQUALS -> "EQUALS" *)
+  (*   | LESSGREATER -> "LESSGREATER" *)
+  (*   | SUM -> "SUM" *)
+  (*   | PRODUCT -> "PRODUCT" *)
+  (*   | PREFIX -> "PREFIX" *)
+  (*   | CALL -> "CALL" *)
 
 
 

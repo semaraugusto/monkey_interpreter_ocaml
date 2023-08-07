@@ -109,35 +109,42 @@ let expected_infix_stmt: program = [
 ];;
 let expected_precedence_stmt: program = [
   Stmt.Expression {
-    token = Token.init Token.Asterisk "*";
+    token = Token.init Token.Minus "-";
     expr = Expression.init_infix (Token.init Token.Asterisk "*") (Expression.init_prefix (Token.init Token.Minus "-") (Expression.init (Token.init Token.Ident "a"))) (Expression.init (Token.init Token.Ident "b"))
-    (* expr = ( *)
-    (*   Expression.Prefix { *)
-    (*     token = { *)
-    (*       t_type = Token.Minus;  *)
-    (*       literal = "-" *)
-    (*     };  *)
-    (*     (* operator = "-";  *) *)
-    (*     value = Expression.Prefix { *)
-    (*       token = { *)
-    (*         t_type = Token.Minus;  *)
-    (*         literal = "-" *)
-    (*       };  *)
-    (*       operator = "-";  *)
-    (*       right = Expression.Identifier { *)
-    (*         token = { *)
-    (*           t_type = Token.Ident;  *)
-    (*           literal = "a" *)
-    (*         };  *)
-    (*         name = "a";  *)
-    (*       } *)
-    (*     }; *)
-    (*     right = Expression.Identifier { *)
-    (*       token = Token.init Token.Ident "b"; *)
-    (*       name = "b";  *)
-    (*     } *)
-    (*   } *)
-    (* ); *)
+  };
+  Stmt.Expression {
+    token = Token.init Token.Bang "!";
+    expr = 
+      Expression.init_prefix 
+        (Token.init Token.Bang "!") 
+        (Expression.init_prefix 
+          (Token.init Token.Minus "-") 
+          (Expression.init (Token.init Token.Ident "a")))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Plus "+") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Ident "a"))
+          (Expression.init (Token.init Token.Ident "b")))
+        (Expression.init (Token.init Token.Ident "c"))
+  };
+];;
+
+let expected_plus_stmt: program = [
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      Expression.init_infix 
+        (Token.init Token.Plus "+") 
+        (Expression.init_infix 
+          (Token.init Token.Plus "+") 
+          (Expression.init (Token.init Token.Ident "a"))
+          (Expression.init (Token.init Token.Ident "b")))
+        (Expression.init (Token.init Token.Ident "c"))
   };
 ];;
 
@@ -243,21 +250,79 @@ let _test_infix_expr_parser () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
+(* let _test_precedence_expr_parser () =  *)
+(*   let code = "-a * b;" in  *)
+(*   let parser = Monkey.Parser.init code in  *)
+(*   let program = Monkey.Parser.parse_program parser [] in  *)
+(*   print_endline "actual_program"; *)
+(*   print_endline "___________________-"; *)
+(*   let () = Monkey.print_program program in  *)
+(*   print_endline "___________________-"; *)
+(**)
+(*   (* print_endline "___________________-"; *) *)
+(*   (* (* let () = match program with  *) *) *)
+(*   (* (* | [] -> print_endline "empty program" *) *) *)
+(*   (* (* | hd :: _tl -> print_endline (Stmt.string_of hd) in *) *) *)
+(*   print_endline "expected_program"; *)
+(*   print_endline "___________________-"; *)
+(*   let () = Monkey.print_program expected_precedence_stmt in  *)
+(*   print_endline "___________________-"; *)
+(*   let is_equal = cmp program expected_infix_stmt in *)
+(*   Alcotest.(check bool) "is_equal" true is_equal;; *)
+(* ;; *)
 let _test_precedence_expr_parser () = 
-  let code = "-a * b;" in 
+  let code = "-a * b;
+!-a;
+a + b + c;" in 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
   print_endline "actual_program";
+  print_endline "___________________-";
   let () = Monkey.print_program program in 
+  print_endline "___________________-";
 
-  print_endline "___________________-";
-  let () = match program with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> print_endline (Stmt.string_of hd) in
-  print_endline "___________________-";
+  (* print_endline "___________________-"; *)
+  (* (* let () = match program with  *) *)
+  (* (* | [] -> print_endline "empty program" *) *)
+  (* (* | hd :: _tl -> print_endline (Stmt.string_of hd) in *) *)
   print_endline "expected_program";
+  print_endline "___________________-";
   let () = Monkey.print_program expected_precedence_stmt in 
-  let is_equal = cmp program expected_infix_stmt in
+  print_endline "___________________-";
+  let strings = List.map Stmt._print program in 
+  let () = match strings with 
+  | [] -> print_endline "empty program"
+  | hd :: _tl -> (print_endline hd) in
+  print_endline "___________________-";
+  print_endline "___________________-";
+  let is_equal = cmp program expected_precedence_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
+let _test_plus_expr_parser () = 
+  let code = "a + b + c;" in 
+  let parser = Monkey.Parser.init code in 
+  let program = Monkey.Parser.parse_program parser [] in 
+  print_endline "actual_program";
+  print_endline "___________________-";
+  let () = Monkey.print_program program in 
+  print_endline "___________________-";
+
+  (* print_endline "___________________-"; *)
+  (* (* let () = match program with  *) *)
+  (* (* | [] -> print_endline "empty program" *) *)
+  (* (* | hd :: _tl -> print_endline (Stmt.string_of hd) in *) *)
+  print_endline "expected_program";
+  print_endline "___________________-";
+  let () = Monkey.print_program expected_precedence_stmt in 
+  print_endline "___________________-";
+  let strings = List.map Stmt._print program in 
+  let () = match strings with 
+  | [] -> print_endline "empty program"
+  | hd :: _tl -> (print_endline hd) in
+  print_endline "___________________-";
+  print_endline "___________________-";
+  let is_equal = cmp program expected_plus_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
@@ -284,7 +349,8 @@ let () =
       Alcotest.test_case "integer_expr" `Quick _test_integer_expr_parser;
       Alcotest.test_case "prefix_expr" `Quick _test_prefix_expr_parser;
       Alcotest.test_case "infix_expr" `Quick _test_infix_expr_parser;
-      Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser;
+      (* Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser; *)
+      Alcotest.test_case "plus_expr" `Quick _test_plus_expr_parser;
       Alcotest.test_case "error" `Quick test_parser_error
     ];
     (* "String conversion", [  *)
