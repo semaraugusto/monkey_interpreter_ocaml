@@ -56,6 +56,19 @@ module Identifier = struct
 
   let string_of id = id.name;;
 
+  let rec string_of_arguments = function
+    | [] -> ""
+    | (hd :: tl) -> 
+        (let hd_string = string_of hd in
+        let tl_string = string_of_arguments tl in
+        let res = if tl_string = "" then 
+          hd_string 
+        else 
+          hd_string ^ ", " ^ tl_string 
+        in
+        res)
+  ;;
+
   let string_of_complete id = 
     Printf.sprintf "Identifier: {Token: (%s) Name: %s}" (Token.string_of id.token) id.name
   ;;
@@ -63,6 +76,8 @@ module Identifier = struct
     Printf.sprintf "%s" stmt.name
   ;;
 end
+(* type arguments = Identifier.t list *)
+
 
 module Integer = struct
   type t = {
@@ -108,6 +123,7 @@ module rec Expression : sig
     val init_integer : Token.t -> t
     val eq : t -> t -> bool
     val string_of : t -> string
+    val string_of_arguments : t list -> string
     val print : t -> string
     val init_prefix : Token.t -> t -> t;;
     val init_infix : Token.t -> t -> t -> t;;
@@ -173,7 +189,7 @@ end = struct
     match token.t_type with 
       | Token.LParen -> Call (
       Call.init token fn arguments)
-      | _ -> failwith ("cannot init InfixExpression with token" ^ Token.string_of token)
+      | _ -> failwith ("cannot init CallExpression with token" ^ Token.string_of token)
   ;;
   let init_if_else (token : Token.t) (condition: t) (consequence : BlockStmt.t) (alternative : BlockStmt.t) : t =
     match token.t_type with 
@@ -198,6 +214,19 @@ end = struct
     | If expr -> "Expression.If: " ^ If.string_of expr
     | Function expr -> "Expression.Function: " ^ Function.string_of expr
     | Call expr -> "Expression.Call: " ^ Call.string_of expr
+  ;;
+
+  let rec string_of_arguments = function
+    | [] -> ""
+    | (hd :: tl) -> 
+        (let hd_string = string_of hd in
+        let tl_string = string_of_arguments tl in
+        let res = if tl_string = "" then 
+          hd_string 
+        else 
+          hd_string ^ ", " ^ tl_string 
+        in
+        res)
   ;;
 
   let print expr = match expr with
@@ -328,12 +357,16 @@ end = struct
   let eq a b = 
     let is_token_eq = Token.eq a.token b.token in
     let is_fn_equal = Expression.eq a.fn b.fn in
-    let are_arguments_equal = List.for_all2 Expression.eq a.arguments b.arguments in
-
-    is_token_eq && is_fn_equal && are_arguments_equal
+    match ((List.length a.arguments) == (List.length b.arguments)) with
+    true -> 
+      let are_arguments_equal = List.for_all2 Expression.eq a.arguments b.arguments in
+      is_token_eq && is_fn_equal && are_arguments_equal
+    | false -> false
+  ;;  
 
   let string_of expr = 
-    Printf.sprintf "%s ( ) { %s }" (Expression.string_of expr.fn) "not implemented!"
+    Printf.sprintf "%s (%s)" (Expression.string_of expr.fn) (Expression.string_of_arguments expr.arguments)
+  ;;
 
 end
 and Function : sig

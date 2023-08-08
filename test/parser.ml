@@ -360,6 +360,82 @@ let expected_precedence_stmt: program = [
           (Expression.init (Token.init Token.True "true"))
           (Expression.init (Token.init Token.True "true"))))
   };
+  Stmt.Expression {
+    token = Token.init Token.Ident "a";
+    expr = 
+      (
+      Expression.init_infix 
+      (Token.init Token.Plus "+")
+      (Expression.init_infix 
+        (Token.init Token.Plus "+")
+        (Expression.init (Token.init Token.Ident "a"))
+        (Expression.init_call 
+          (Token.init Token.LParen "(")
+          (Expression.init (Token.init Token.Ident "add"))
+          ([
+            (Expression.init_infix 
+              (Token.init Token.Asterisk "*")
+              (Expression.init (Token.init Token.Ident "b"))
+              (Expression.init (Token.init Token.Ident "c")));
+          ])))
+      )
+      (Expression.init (Token.init Token.Ident "d"))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "add";
+    expr = 
+      (Expression.init_call 
+        (Token.init Token.LParen "(")
+        (Expression.init (Token.init Token.Ident "add"))
+        ([
+          (Expression.init (Token.init Token.Ident "a"));
+          (Expression.init (Token.init Token.Ident "b"));
+          (Expression.init (Token.init Token.Int "1"));
+          (Expression.init_infix 
+            (Token.init Token.Asterisk "*")
+            (Expression.init (Token.init Token.Int "2"))
+            (Expression.init (Token.init Token.Int "3")));
+          (Expression.init_infix 
+            (Token.init Token.Plus "+")
+            (Expression.init (Token.init Token.Int "4"))
+            (Expression.init (Token.init Token.Int "5")));
+          (Expression.init_call 
+            (Token.init Token.LParen "(")
+            (Expression.init (Token.init Token.Ident "add"))
+            ([
+              (Expression.init (Token.init Token.Int "6"));
+              (Expression.init_infix 
+                (Token.init Token.Asterisk "*")
+                (Expression.init (Token.init Token.Int "7"))
+                (Expression.init (Token.init Token.Int "8")));
+            ]));
+        ]))
+  };
+  Stmt.Expression {
+    token = Token.init Token.Ident "add";
+    expr = 
+      (Expression.init_call 
+        (Token.init Token.LParen "(")
+        (Expression.init (Token.init Token.Ident "add"))
+        ([
+          (Expression.init_infix 
+              (Token.init Token.Plus "+")
+              (Expression.init_infix  (* (c * d) / f *)
+                (Token.init Token.Plus "+")
+                (Expression.init_infix  (* (c * d) / f *)
+                  (Token.init Token.Plus "+")
+                    (Expression.init (Token.init Token.Ident "a"))
+                    (Expression.init (Token.init Token.Ident "b")))
+                (Expression.init_infix  (* (c * d) / f *)
+                  (Token.init Token.Slash "/")
+                  (Expression.init_infix 
+                    (Token.init Token.Asterisk "*")
+                    (Expression.init (Token.init Token.Ident "c"))
+                    (Expression.init (Token.init Token.Ident "d")))
+                  (Expression.init (Token.init Token.Ident "f"))))
+              (Expression.init (Token.init Token.Ident "g")))
+        ]))
+  };
 ];;
 
 let expected_boolean_stmt: program = [
@@ -464,18 +540,26 @@ let expected_fn_stmt: program = [
   };
 ];;
 
-(* let expected_call_stmt: program = [ *)
-(*   Stmt.Expression { *)
-(*     token = Token.init Token.Ident "add"; *)
-(*     expr =  *)
-(*       (Expression.init_call  *)
-(*         (Token.init Token.Plus "+")  *)
-(*         (Expression.init_function  *)
-(*           (Token.init Token.Function "fn") *)
-(*         (* (Expression.init (Token.init Token.Ident "x")) *) *)
-(*         (Expression.init (Token.init Token.Ident "y"))) *)
-(*   }; *)
-(* ];; *)
+let expected_call_stmt: program = [
+  Stmt.Expression {
+    token = Token.init Token.Ident "add";
+    expr = 
+        Expression.init_call 
+        (Token.init Token.LParen "(")
+        (Expression.init (Token.init Token.Ident "add"))
+        ([
+          (Expression.init (Token.init Token.Int "1"));
+          (Expression.init_infix 
+            (Token.init Token.Asterisk "*")
+            (Expression.init (Token.init Token.Int "2"))
+            (Expression.init (Token.init Token.Int "3")));
+          (Expression.init_infix 
+            (Token.init Token.Asterisk "+")
+            (Expression.init (Token.init Token.Int "4"))
+            (Expression.init (Token.init Token.Int "5")))
+        ])
+  };
+];;
 
 let _test_let_stmt_parser () = 
   let code = "
@@ -601,7 +685,10 @@ a + b * c + d / e - f
 (5 + 5) * 2;
 2 / (5 + 5);
 -(5 + 5);
-!(true == true);" in
+!(true == true);
+a + add(b * c) + d;
+add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8));
+add(a + b + c * d / f + g)" in
 
   let parser = Monkey.Parser.init code in 
   let program = Monkey.Parser.parse_program parser [] in 
@@ -685,10 +772,7 @@ let _test_fn_stmt () =
   let () = Monkey.print_program program in 
 
   let () = Monkey.print_program expected_precedence_stmt in 
-  let strings = List.map Stmt._print program in 
-  let () = match strings with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> (print_endline hd) in
+  (* let strings = List.map Stmt._print program in  *)
   let is_equal = cmp program expected_fn_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -704,7 +788,7 @@ let _test_call_stmt () =
   let () = match strings with 
   | [] -> print_endline "empty program"
   | hd :: _tl -> (print_endline hd) in
-  let is_equal = cmp program expected_fn_stmt in
+  let is_equal = cmp program expected_call_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 

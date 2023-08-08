@@ -156,7 +156,7 @@ module Parser = struct
       true -> (
         let parser = next_token parser in
         Printf.printf "infix-loop TRUE cur_token: %s left: %s\n" (Token.string_of parser.cur_token) (Expression.print left);
-        let (parser, left) = parse_infix_expr parser left in
+        let (parser, left) = infix parser left in
         let (parser, left) = infix_loop parser precedence left in 
         (parser, left)
       )
@@ -233,6 +233,7 @@ module Parser = struct
     let cur_token = parser.cur_token in
 
     let (parser, expr) = parse_expr parser Token.LOWEST in
+    Printf.printf "parse_expr_stmt : %s expr: %s\n" (Token.string_of cur_token) (Expression.print expr);
 
     let stmt = Ast.Stmt.Expression (Ast.ExpressionStmt.init cur_token expr) in
 
@@ -261,7 +262,7 @@ module Parser = struct
     let precedence = cur_precedence parser in
     let parser = next_token parser in
     let (parser, right) = parse_expr parser precedence in
-    (* Printf.printf "infix_token : %s left: %s right: %s\n" (Token.string_of infix_token) (Expression.print left) (Expression.print right); *)
+    Printf.printf "infix_token : %s left: %s right: %s\n" (Token.string_of infix_token) (Expression.print left) (Expression.print right);
     let expr = Ast.Expression.init_infix infix_token left right in
 
     (parser, expr)
