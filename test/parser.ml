@@ -561,14 +561,17 @@ let expected_call_stmt: program = [
   };
 ];;
 
+let ( let* ) x f = match x with
+  | Ok x -> f x
+  | Error err -> failwith (ParseError.string_of err)
+
 let _test_let_stmt_parser () = 
   let code = "
 let x = 5;
 let y = 10;
 let foobar = 838383;" in
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_let_stmt in
   Alcotest.(check bool) "is_equal" true is_equal
 ;;
@@ -591,8 +594,7 @@ let _test_return_stmt_parser () =
 return 10;
 return 993322;" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_return_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -600,8 +602,7 @@ return 993322;" in
 let _test_identity_expr_parser () = 
   let code = "foobar;" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_identity_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -609,8 +610,7 @@ let _test_identity_expr_parser () =
 let _test_integer_expr_parser () = 
   let code = "5;" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_integer_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -621,11 +621,7 @@ let _test_prefix_expr_parser () =
 !true;
 !false;" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  print_endline "expected_program";
-  let () = Monkey.print_program program in 
-  print_endline "actual_program";
-  let () = Monkey.print_program expected_prefix_stmt in 
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_prefix_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -652,17 +648,7 @@ true == true;
 true != false;
 false == false;" in
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  print_endline "actual_program";
-  let () = Monkey.print_program program in 
-
-  print_endline "___________________-";
-  let () = match program with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> print_endline (Stmt.string_of hd) in
-  print_endline "___________________-";
-  print_endline "expected_program";
-  let () = Monkey.print_program expected_infix_stmt in 
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_infix_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -691,22 +677,7 @@ add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8));
 add(a + b + c * d / f + g)" in
 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  print_endline "actual_program";
-  print_endline "___________________-";
-  let () = Monkey.print_program program in 
-  print_endline "___________________-";
-
-  print_endline "expected_program";
-  print_endline "___________________-";
-  let () = Monkey.print_program expected_precedence_stmt in 
-  print_endline "___________________-";
-  let strings = List.map Stmt._print program in 
-  let () = match strings with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> (print_endline hd) in
-  print_endline "___________________-";
-  print_endline "___________________-";
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_precedence_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -717,20 +688,7 @@ false
 3 > 5 == false
 3 < 5 == true" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  print_endline "actual_program";
-  print_endline "___________________-";
-  let () = Monkey.print_program program in 
-  print_endline "___________________-";
-
-  print_endline "expected_program";
-  print_endline "___________________-";
-  let () = Monkey.print_program expected_precedence_stmt in 
-  print_endline "___________________-";
-  let strings = List.map Stmt._print program in 
-  let () = match strings with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> (print_endline hd) in
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_boolean_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -738,14 +696,7 @@ false
 let _test_if_stmt () = 
   let code = "if (x < y ) { x }" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
-
-  let () = Monkey.print_program expected_precedence_stmt in 
-  let strings = List.map Stmt._print program in 
-  let () = match strings with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> (print_endline hd) in
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_if_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -753,14 +704,7 @@ let _test_if_stmt () =
 let _test_else_stmt () = 
   let code = "if (x < y ) { x } else { y }" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
-
-  let () = Monkey.print_program expected_precedence_stmt in 
-  let strings = List.map Stmt._print program in 
-  let () = match strings with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> (print_endline hd) in
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_else_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -768,11 +712,7 @@ let _test_else_stmt () =
 let _test_fn_stmt () = 
   let code = "fn(x, y) { x + y }" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
-
-  let () = Monkey.print_program expected_precedence_stmt in 
-  (* let strings = List.map Stmt._print program in  *)
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_fn_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
@@ -780,14 +720,7 @@ let _test_fn_stmt () =
 let _test_call_stmt () = 
   let code = "add(1, 2 * 3, 4 + 5);" in 
   let parser = Monkey.Parser.init code in 
-  let program = Monkey.Parser.parse_program parser [] in 
-  let () = Monkey.print_program program in 
-
-  let () = Monkey.print_program expected_precedence_stmt in 
-  let strings = List.map Stmt._print program in 
-  let () = match strings with 
-  | [] -> print_endline "empty program"
-  | hd :: _tl -> (print_endline hd) in
+  let* program = Monkey.Parser.parse_program parser [] in 
   let is_equal = cmp program expected_call_stmt in
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
