@@ -663,19 +663,22 @@ end = struct
     | ({token = a_token; statements = a_statements}, {token = b_token; statements = b_statements}) -> 
     let token_is_equal = (Token.eq a_token b_token) in
       (token_is_equal) && (block_eq  a_statements b_statements)
-        (* (eq {token = a_token; statements = a_stmts} {token = b_token; statements = b_stmts}) *)
-
-
 end
 
 type program = Stmt.t list
 
-(* let rec string_of program output = match program with   *)
-(*   | [] -> "EOF\n" *)
-(*   | hd :: tl ->  *)
-(*       let stmt = Stmt.string_of hd in *)
-(*       let output = Printf.sprintf "Stmt: %s\n" stmt in *)
-(*       string_of tl output *)
+module Node = struct
+  type t = 
+    | Program of program
+    | Statement of Stmt.t
+    | Expression of Expression.t
+  ;;
+
+  let of_stmt stmt = Statement stmt;;
+  let of_program prog = Program prog;;
+  let of_expression expr = Expression expr;;
+
+end
 
 let rec print_program = function 
   | [] -> print_endline "PrintProgram EOF\n"

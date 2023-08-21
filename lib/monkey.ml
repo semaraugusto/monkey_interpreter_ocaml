@@ -2,6 +2,8 @@ include Token
 include Lex
 include Ast
 include Parser
+(* include Object *)
+include Evaluator
 let test str = print_endline str
 
 (* module Token = struct *)

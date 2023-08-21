@@ -320,6 +320,18 @@ module Parser = struct
         skip_until parser t_type
   ;;
 
+  let rec parse parser program = 
+    let cur = parser.cur_token.t_type in 
+    let peek = parser.peek_token.t_type in 
+    match (cur, peek) with
+    | (Token.EOF, _) -> Ok (Node.Program (List.rev program))
+    | (_, _) -> 
+        let* (parser, stmt) = parse_stmt parser in
+        let program = stmt :: program in
+        let parser = next_token parser in
+        parse parser program
+  ;;
+
   let rec parse_program parser program = 
     let cur = parser.cur_token.t_type in 
     let peek = parser.peek_token.t_type in 

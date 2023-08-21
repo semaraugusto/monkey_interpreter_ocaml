@@ -9,6 +9,7 @@ module Infix = Ast.Infix
 module Function = Ast.Function
 module If = Ast.If
 module Stmt = Ast.Stmt
+module Node = Ast.Node
 module ExpressionStmt = Ast.ExpressionStmt
 module LetStmt = Ast.LetStmt
 module ReturnStmt = Ast.ReturnStmt
@@ -57,6 +58,7 @@ module Parser :
     val parse_infix_expr : t -> Expression.t -> (t * Expression.t, ParseError.t) result
     val infix : t -> Expression.t -> (t * Expression.t, ParseError.t) result
     val skip_until : t -> Token.t_type -> t
+    val parse: t -> Stmt.t list -> (Node.t, ParseError.t) result
     val parse_program : t -> Stmt.t list -> (Stmt.t list, ParseError.t) result
   end
 
