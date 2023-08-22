@@ -1,21 +1,15 @@
 include Object;;
 include Parser;;
 
-module EvaluationError = struct 
-  type t =
-    | CannotEvaluate of string
-    | Failed of string
-
-  let string_of = function
-    | CannotEvaluate msg -> "CannotEvaluate: " ^ msg
-    | Failed msg -> "Failed: " ^ msg
-
-end
-
 (* let ( let* ) x f = match x with *)
 (*   | Ok x -> f x *)
 (*   | Error err -> failwith (EvaluationError.string_of err) *)
 (* ;; *)
+type errr = [
+  | `CannotEvaluate of string
+  | `Failed of string
+];;
+
 module Object = struct
   type t = 
   | Integer of int
@@ -41,10 +35,12 @@ module Object = struct
   ;;
 end
 
-let ( let* ) x f = match x with
-  | Ok x -> f x
-  | Error err -> failwith (EvaluationError.string_of err)
-;;
+(* let ( let* ) x f = match x with *)
+(*   | Ok x -> f x *)
+(*   | Error err -> failwith (EvaluationError.string_of err) *)
+(* ;; *)
+
+let (let*) = Result.bind
 
 let eval_integer_infix_expr left operator right = 
   match operator with 
@@ -80,7 +76,7 @@ let eval_minus_expr = function
 ;;
 
 
-let rec eval node = 
+let rec eval (node : Node.t) = 
   match node with 
     | Ast.Node.Program p -> eval_statements p
     | Ast.Node.Expression expr -> eval_expr expr
@@ -114,11 +110,11 @@ eval_expr = function
     let* right = eval_expr expr.right in 
     Ok (eval_infix_expr left expr.operator right)
 
-  | _ -> Error (EvaluationError.CannotEvaluate "eval_expr not implemented for this type of expression")
+  | _ -> Error (`CannotEvaluate "eval_expr not implemented for this type of expression")
 and
 eval_statement = function 
   | Ast.Stmt.Expression stmt -> eval_expr stmt.expr
-  | _ -> Error (EvaluationError.CannotEvaluate "eval_statement not implemented for this type of statement")
+  | _ -> Error (`CannotEvaluate "eval_statement not implemented for this type of statement")
 and
 eval_prefix_expr operator right = 
   match operator with 
@@ -136,9 +132,7 @@ eval_infix_expr left operator right =
 
 let eval_program code = 
   let parser = Parser.init code in 
-  let program = Parser.parse parser [] in 
-  match program with 
-  | Ok x -> eval x
-  | Error err -> failwith (ParseError.string_of err)
+  let* program = Parser.parse parser [] in 
 
-  (* eval program *)
+  let result = eval program in 
+  result

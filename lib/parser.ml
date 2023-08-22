@@ -2,30 +2,25 @@
 include Lex
 include Ast
 
-module ParseError = struct 
-  type t =
-    | NoPrefixParseFn of string
-    | NoInfixParseFn of string
-    | ExpectedSemicolon of string
-    | ExpectedIdentifier of string
-    | ExpectedInteger of string
-    | ExpectedBoolean of string
 
-  let string_of = function
-    | NoPrefixParseFn msg -> "NoPrefixParseFn: " ^ msg
-    | NoInfixParseFn msg -> "NoInfixParseFn: " ^ msg
-    | ExpectedSemicolon msg -> "ExpectedSemicolon: " ^ msg
-    | ExpectedIdentifier msg -> "ExpectedIdentifier: " ^ msg
-    | ExpectedInteger msg -> "ExpectedIdentifier: " ^ msg
-    | ExpectedBoolean msg -> "ExpectedBoolean: " ^ msg
+(* let ( let* ) x f = match x with *)
+(*   | Ok x -> f x *)
+(*   | Error err -> Error err *)
 
-end
+let ( let* ) = Result.bind;;
 
-let ( let* ) x f = match x with
-  | Ok x -> f x
-  | Error err -> Error err
 
 module Parser = struct 
+  type error = [
+    | `NoPrefixParseFn of string
+    | `NoInfixParseFn of string
+    | `ExpectedSemicolon of string
+    | `ExpectedIdentifier of string
+    | `ExpectedInteger of string
+    | `ExpectedBoolean of string
+  ]
+  [@@deriving show]
+
   type t = {
     lexer : Lexer.t;
     cur_token : Token.t;
@@ -50,7 +45,7 @@ module Parser = struct
   
   let parse_integer (parser : t) =
     match (cur_token_is parser Token.Int) with 
-    | false -> Error (ParseError.ExpectedInteger ("found: " ^ (Token.string_of parser.cur_token) ^ " instead"))
+    | false -> Error (`ExpectedInteger ("found: " ^ (Token.string_of parser.cur_token) ^ " instead"))
     | true -> 
       let token = parser.cur_token in
       Ok (parser, Ast.Expression.init token)
@@ -58,7 +53,7 @@ module Parser = struct
 
   let parse_boolean (parser : t) =
     match (cur_token_is parser Token.True) || (cur_token_is parser Token.False) with 
-    | false -> Error (ParseError.ExpectedBoolean ("found: " ^ (Token.string_of parser.cur_token) ^ " instead"))
+    | false -> Error (`ExpectedBoolean ("found: " ^ (Token.string_of parser.cur_token) ^ " instead"))
     | true -> 
       let token = parser.cur_token in
       Ok (parser, Ast.Expression.init token)
@@ -67,7 +62,7 @@ module Parser = struct
   let parse_identifier (parser : t) =
     (* assert (cur_token_is parser Token.Ident); *)
     match cur_token_is parser Token.Ident with 
-    | false -> Error (ParseError.ExpectedIdentifier ("found: " ^ (Token.string_of parser.cur_token) ^ " instead"))
+    | false -> Error (`ExpectedIdentifier ("found: " ^ (Token.string_of parser.cur_token) ^ " instead"))
     | true -> 
       let token = parser.cur_token in
       Ok (parser, Ast.Expression.init token)
@@ -275,7 +270,7 @@ module Parser = struct
       |false -> 
         Ok (parser, stmt)
   and
-  prefix (parser : t) : (t * Expression.t, ParseError.t) result = match parser.cur_token.t_type with 
+  prefix (parser : t) = match parser.cur_token.t_type with 
     | Token.Ident -> parse_identifier parser
     | Token.Int -> parse_integer parser
     | Token.True

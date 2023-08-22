@@ -4,6 +4,7 @@ include Ast
 include Parser
 (* include Object *)
 include Evaluator
+include Error
 let test str = print_endline str
 
 (* module Token = struct *)
