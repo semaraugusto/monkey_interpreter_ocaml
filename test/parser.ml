@@ -564,7 +564,7 @@ let expected_call_stmt: program = [
 let ( let* ) x f = match x with
   | Ok x -> f x
   (* | Error err -> failwith (ParseError.string_of err) *)
-  | Error err -> Monkey.handle_errors err
+  | Error err -> Monkey.failwith_error err
 
 (* let ( let* ) = Result.bind;; *)
 

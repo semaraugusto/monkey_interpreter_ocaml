@@ -671,6 +671,7 @@ module Node = struct
   type t = 
     | Program of program
     | Statement of Stmt.t
+    | BlockStatement of BlockStmt.t
     | Expression of Expression.t
   ;;
 

@@ -7,7 +7,7 @@ open Monkey
 let ( let* ) x f = match x with
   | Ok x -> f x
   (* | Error err -> failwith (ParseError.string_of err) *)
-  | Error err -> Monkey.handle_errors err
+  | Error err -> Monkey.failwith_error err
 
 let test_int_eval () = 
   let code = ["5"; "10"; "-5"; "-10"; "5 + 5 + 5 + 5 - 10";
@@ -62,10 +62,63 @@ let test_bool_eval () =
   done
 ;;
 
+let rec do_all f src expected =
+match (src, expected) with
+  | [], [] -> ()
+  | _, [] -> failwith "list length mismatch"
+  | [], _ -> failwith "list length mismatch"
+| x :: xs, e :: es-> f x e; do_all f xs es
+;; 
+
+let check_eval src expected =
+  let* program = Monkey.eval_program src in 
+  print_endline ("ACTUAL: " ^ (Monkey.Object.string_of program));
+  print_endline ("EXPECTED: " ^ (Monkey.Object.string_of expected));
+  let is_equal = Object.eq program expected in
+  Alcotest.(check bool) "is_equal" true is_equal
+
+let test_conditional_eval () = 
+  let code = [ 
+    "if (true) { 10 }";
+    "if (false) { 10 }";
+    "if (1) { 10 }";
+    "if (1 < 2) { 10 }";
+    "if (1 > 2) { 10 }";
+    "if (1 < 2) { 10 } else { 20 }";
+    "if (1 > 2) { 10 } else { 20 }";
+  ] in 
+  let expected = [
+    Object.Integer 10;
+    Object.Null;
+    Object.Integer 10;
+    Object.Integer 10;
+    Object.Null;
+    Object.Integer 10;
+    Object.Integer 20;
+  ] in 
+
+  do_all check_eval code expected;
+;;
+
+let test_return_eval () = 
+  let code = [ 
+    "return 10;";
+    "return 10; 9;";
+  ] in 
+  let expected = [
+    Object.Return (Object.Integer 10);
+    Object.Return (Object.Integer 10);
+  ] in 
+
+  do_all check_eval code expected;
+;;
+
 let () =
   Alcotest.run "Parsing" [
     "primitive eval", [ 
       Alcotest.test_case "int" `Quick test_int_eval;
       Alcotest.test_case "bool" `Quick test_bool_eval;
+      Alcotest.test_case "conditional" `Quick test_conditional_eval;
+      Alcotest.test_case "return" `Quick test_return_eval;
     ];
   ]
