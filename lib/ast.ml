@@ -678,6 +678,11 @@ module Node = struct
   let of_stmt stmt = Statement stmt;;
   let of_program prog = Program prog;;
   let of_expression expr = Expression expr;;
+  let string_of = function 
+  | Program prog -> Printf.sprintf "Program: %s" (String.concat "\n" (List.map Stmt.string_of prog))
+  | Statement stmt -> Printf.sprintf "Statement: %s" (Stmt.string_of stmt)
+  | BlockStatement block -> Printf.sprintf "Block: %s" (String.concat "\n" (List.map Stmt.string_of block.statements))
+  | Expression expr -> Printf.sprintf "Expression: %s" (Expression.string_of expr)
 
 end
 
@@ -687,3 +692,10 @@ let rec print_program = function
     let stmt = Stmt._print hd in
     let () = print_endline ("PrintProgram Stmt: " ^ stmt) in
     print_program tl
+
+let rec show_program = function 
+  | [] -> print_endline "PrintProgram EOF\n"
+  | hd :: tl -> 
+    let stmt = Node.string_of hd in
+    let () = print_endline ("PrintProgram Stmt: " ^ stmt) in
+    show_program tl

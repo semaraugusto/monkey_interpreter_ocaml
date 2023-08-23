@@ -24,7 +24,7 @@ module Object = struct
   let rec string_of = function 
     | Integer i -> string_of_int i
     | Boolean b -> string_of_bool b
-    | Return ret -> ("Return: " ^ (string_of ret))
+    | Return ret -> ("ObjectReturn: " ^ (string_of ret))
     | Null -> "null"
   ;;
 
@@ -92,16 +92,17 @@ let rec eval (node : Node.t) =
 
 and
 eval_statements (statements : Ast.Stmt.t list) = 
-  let rec aux (statements : Ast.Stmt.t list) = 
+  let rec eval_loop (statements : Ast.Stmt.t list) = 
     match statements with
       | [] -> Ok (Object.Null)
       | x::[] -> eval (Ast.Node.of_stmt x)
       | x::xs -> 
-        let* _result = eval (Ast.Node.of_stmt x) in 
-        Printf.printf "result: %s\n" (Object.inspect _result);
-        aux xs
+        let* result = eval (Ast.Node.of_stmt x) in 
+        match result with 
+          | Object.Return _result -> Ok (Object.Return _result)
+          | _ -> eval_loop xs
   in
-  aux statements
+  eval_loop statements
 and 
 eval_expr = function 
   | Ast.Expression.Integer expr -> Ok (Object.Integer expr.value)
@@ -131,8 +132,10 @@ and
 eval_statement = function 
   | Ast.Stmt.Expression stmt -> eval_expr stmt.expr
   | Ast.Stmt.Return stmt -> 
-    let* return_value = eval_expr stmt.expr in 
-    Ok (Object.Return return_value)
+      let* return_value = eval_expr stmt.expr in 
+      print_endline ("return_statement: " ^ Object.string_of return_value);
+      
+      Ok (Object.Return return_value)
 
   | _ -> Error (`CannotEvaluate "eval_statement not implemented for this type of statement")
 and
@@ -152,6 +155,9 @@ eval_infix_expr left operator right =
 let eval_program code = 
   let parser = Parser.init code in 
   let* program = Parser.parse parser [] in 
-
-  let result = eval program in 
-  result
+  print_endline "-------------------------------";
+  print_endline (Node.string_of program);
+  print_endline "-------------------------------";
+  (* let result = eval program in  *)
+  (* result *)
+  eval program
