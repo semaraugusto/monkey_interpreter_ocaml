@@ -185,14 +185,15 @@ module Token = struct
 
   let eq a b = a.literal = b.literal && a.t_type = b.t_type
 
-  let pp ppf tk = Fmt.pf ppf "Token =%s" (tokenToString tk)
 
   let print tk = 
         let t = tokenToString tk in
         Printf.printf "Token: %s - Literal: \'%s\'\n" t tk.literal
 
-  let string_of tk = 
-    Printf.sprintf "Token: %s, Literal: \'%s\'" (tokenToString tk) tk.literal
+  (* let string_of tk =  *)
+  (*   Printf.sprintf "Token: %s, Literal: \'%s\'" (tokenToString tk) tk.literal *)
+  let string_of tok = tokenToString tok;;
+  let pp tok = tokenToString tok;;
 
   let test str = print_endline str
 end

@@ -100,12 +100,24 @@ let test_conditional_eval () =
   do_all check_eval code expected;
 ;;
 
-let test_return_eval () = 
+let _test_return_eval () = 
   let code = [ 
     "return 10;";
     "return 10; 9;";
+    "return 2 * 5; 9;";
+    "9; return 2 * 5; 9;";
+    "if (10 > 1) {
+  if (10 > 2) {
+    return 10;
+  }
+
+  return 1;
+}";
   ] in 
   let expected = [
+    Object.Return (Object.Integer 10);
+    Object.Return (Object.Integer 10);
+    Object.Return (Object.Integer 10);
     Object.Return (Object.Integer 10);
     Object.Return (Object.Integer 10);
   ] in 
@@ -119,6 +131,6 @@ let () =
       Alcotest.test_case "int" `Quick test_int_eval;
       Alcotest.test_case "bool" `Quick test_bool_eval;
       Alcotest.test_case "conditional" `Quick test_conditional_eval;
-      Alcotest.test_case "return" `Quick test_return_eval;
+      Alcotest.test_case "return" `Quick _test_return_eval;
     ];
   ]

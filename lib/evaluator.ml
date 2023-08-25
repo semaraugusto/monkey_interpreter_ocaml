@@ -83,16 +83,18 @@ let is_truthy = function
 let rec eval (node : Node.t) = 
   match node with 
     | Ast.Node.Program p -> eval_statements p
-    | Ast.Node.Expression expr -> eval_expr expr
     | Ast.Node.Statement stmt -> eval_statement stmt
-    | Ast.Node.BlockStatement block -> eval_statements block.statements
+    | Ast.Node.BlockStatement block -> eval_block_statement block
+    | Ast.Node.Expression expr -> eval_expr expr
     (* | _ -> Error (EvaluationError.Failed "here not implemented") *)
     (* | Ast.Node.Expression e -> eval_expression e *)
     (* | Ast.Node.Statement s -> eval_statement s *)
 
 and
-eval_statements (statements : Ast.Stmt.t list) = 
-  let rec eval_loop (statements : Ast.Stmt.t list) = 
+eval_block_statement block =
+  let rec eval_loop statements return = 
+    (* print_endline ("eval_block_statement iteration: " ^ (string_of_int return)); *)
+    (* print_endline ("statements: " ^ (Ast.BlockStmt.string_of_statements statements)); *)
     match statements with
       | [] -> Ok (Object.Null)
       | x::[] -> eval (Ast.Node.of_stmt x)
@@ -100,9 +102,34 @@ eval_statements (statements : Ast.Stmt.t list) =
         let* result = eval (Ast.Node.of_stmt x) in 
         match result with 
           | Object.Return _result -> Ok (Object.Return _result)
-          | _ -> eval_loop xs
+          | _ -> eval_loop xs (return + 1)
   in
-  eval_loop statements
+  eval_loop block.statements 0
+
+and 
+eval_statements (statements : Ast.Stmt.t list) = 
+  let rec eval_loop (statements : Ast.Stmt.t list) result = 
+    match statements with
+      | [] -> Ok result
+      | x::[] -> (
+        (* print_endline "Eval last statement"; *)
+        (* print_endline ("eval_statement: " ^ (Ast.Stmt.string_of x)); *)
+        
+        match result with 
+          | Object.Return _ -> Ok result
+          | _ -> eval (Ast.Node.of_stmt x)
+      )
+        (* let* result = eval (Ast.Node.of_stmt x) *)
+        
+      | x::xs -> 
+        (* print_endline "Eval statementss"; *)
+        (* print_endline ("eval_statement: " ^ (Ast.Stmt.string_of x)); *)
+        let* result = eval (Ast.Node.of_stmt x) in 
+        match result with 
+          | Object.Return _result -> Ok (Object.Return _result)
+          | _ -> eval_loop xs result
+  in
+  eval_loop statements Object.Null
 and 
 eval_expr = function 
   | Ast.Expression.Integer expr -> Ok (Object.Integer expr.value)
@@ -133,7 +160,7 @@ eval_statement = function
   | Ast.Stmt.Expression stmt -> eval_expr stmt.expr
   | Ast.Stmt.Return stmt -> 
       let* return_value = eval_expr stmt.expr in 
-      print_endline ("return_statement: " ^ Object.string_of return_value);
+      (* print_endline ("return_statement: " ^ Object.string_of return_value); *)
       
       Ok (Object.Return return_value)
 
@@ -156,7 +183,7 @@ let eval_program code =
   let parser = Parser.init code in 
   let* program = Parser.parse parser [] in 
   print_endline "-------------------------------";
-  print_endline (Node.string_of program);
+  print_endline (Node.pp program);
   print_endline "-------------------------------";
   (* let result = eval program in  *)
   (* result *)

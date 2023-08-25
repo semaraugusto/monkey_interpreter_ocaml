@@ -28,6 +28,7 @@ module Boolean = struct
   ;;
 
   let string_of b = string_of_bool b.value;;
+  let pp b = "(Bool: " ^ string_of_bool b.value ^ ")";;
 
   let string_of_complete id = 
     Printf.sprintf "Boolean: {Token: (%s) value: %s}" (Token.string_of id.token) (string_of_bool id.value)
@@ -55,6 +56,7 @@ module Identifier = struct
   ;;
 
   let string_of id = id.name;;
+  let pp id = "(Identifier: " ^ id.name ^ ")";;
 
   let rec string_of_arguments = function
     | [] -> ""
@@ -100,8 +102,10 @@ module Integer = struct
   ;;
 
   let string_of i = 
-    Printf.sprintf "Integer: {Token: (%s) Value: %s}" (Token.string_of i.token) (string_of_int i.value)
+    Printf.sprintf "INT: {Token: (%s) Value: %s}" (Token.string_of i.token) (string_of_int i.value)
   ;;
+
+  let pp i = "(INT: " ^ string_of_int i.value ^ ")";;
 
   let print stmt = 
     Printf.sprintf "%d" stmt.value
@@ -123,6 +127,7 @@ module rec Expression : sig
     val init_integer : Token.t -> t
     val eq : t -> t -> bool
     val string_of : t -> string
+    val pp : t -> string
     val string_of_arguments : t list -> string
     val print : t -> string
     val init_prefix : Token.t -> t -> t;;
@@ -215,6 +220,17 @@ end = struct
     | Function expr -> "Expression.Function: " ^ Function.string_of expr
     | Call expr -> "Expression.Call: " ^ Call.string_of expr
   ;;
+    
+  let pp expr = match expr with
+    | Boolean expr -> Boolean.pp expr
+    | Identifier expr -> Identifier.pp expr
+    | Integer expr -> Integer.pp expr
+    | Prefix expr -> Prefix.pp expr
+    | Infix expr -> Infix.pp expr
+    | If expr -> If.pp expr
+    | Function expr -> Function.string_of expr
+    | Call expr -> Call.string_of expr
+  ;;
 
   let rec string_of_arguments = function
     | [] -> ""
@@ -267,6 +283,7 @@ and Prefix : sig
   }
   val init : Token.t -> Expression.t -> t
   val string_of : t -> string
+  val pp : t -> string
   val print : t -> string
   val eq : t -> t -> bool
 end = struct 
@@ -281,11 +298,8 @@ end = struct
 
   let eq a b = 
     let is_token_eq = Token.eq a.token b.token in
-    Printf.printf "token: %s == %s: %b" (Token.string_of a.token) (Token.string_of b.token) is_token_eq;
     let is_operator_eq = a.operator = b.operator in
-    Printf.printf "operator: %s == %s: %b" a.operator b.operator is_operator_eq;
     let is_right_eq = Expression.eq a.right b.right in
-    Printf.printf "right: %s == %s: %b" (Expression.string_of a.right) (Expression.string_of b.right) is_right_eq;
 
     is_token_eq && is_operator_eq && is_right_eq
   ;;
@@ -293,6 +307,9 @@ end = struct
   let string_of expr = 
     Printf.sprintf "(%s %s %s)" (Token.string_of expr.token) expr.operator (Expression.string_of expr.right)
   ;;
+
+  let pp expr = 
+    Printf.sprintf "prefix: (%s %s %s)" (Token.pp expr.token) expr.operator (Expression.pp expr.right)
 
   let print expr = 
     Printf.sprintf "(\'%s\' %s)" expr.operator (Expression.print expr.right)
@@ -307,6 +324,7 @@ and Infix : sig
   }
   val init : Token.t -> Expression.t -> Expression.t -> t
   val string_of : t -> string
+  val pp : t -> string
   val print : t -> string
   val eq : t -> t -> bool
 end = struct 
@@ -321,11 +339,14 @@ end = struct
     {token; left; operator = token.literal; right;}
 
   let string_of expr = 
-    Printf.sprintf "InfixStmt: (%s <-> operator=\'%s\' <-> %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
+    Printf.sprintf "(%s \'%s\' %s)" (Expression.string_of expr.left) expr.operator (Expression.string_of expr.right)
 
 
   let print expr = 
     Printf.sprintf "(%s \'%s\' %s)" (Expression.print expr.left) expr.operator (Expression.print expr.right)
+
+  let pp expr = 
+    Printf.sprintf "(%s \'%s\' %s)" (Expression.pp expr.left) expr.operator (Expression.pp expr.right)
 
   let eq a b = 
     let is_left_eq = Expression.eq a.left b.left in
@@ -342,6 +363,7 @@ and Call : sig
     arguments : Expression.t list;
   };;
   val string_of : t -> string
+  val pp : t -> string
   val eq : t -> t -> bool
   val init : Token.t -> Expression.t -> Expression.t list -> t
 end = struct 
@@ -366,6 +388,8 @@ end = struct
 
   let string_of expr = 
     Printf.sprintf "%s (%s)" (Expression.string_of expr.fn) (Expression.string_of_arguments expr.arguments)
+
+  let pp expr = "(call: " ^ string_of expr ^ ")";;
   ;;
 
 end
@@ -376,6 +400,7 @@ and Function : sig
     body : BlockStmt.t;
   };;
   val string_of : t -> string
+  val pp : t -> string
   val eq : t -> t -> bool
   val init : Token.t -> Identifier.t list -> BlockStmt.t -> t
 end = struct 
@@ -388,7 +413,12 @@ end = struct
     {token; parameters; body;}
   ;;
   let string_of expr = 
-    Printf.sprintf "%s ( ) { %s }" (Token.string_of expr.token) (BlockStmt.string_of expr.body)
+    Printf.sprintf "%s (%s) { %s }" (Token.string_of expr.token) (String.concat "," (List.map Identifier.string_of expr.parameters)) (BlockStmt.string_of expr.body)
+  (* | BlockStatement block -> Printf.sprintf "Block: %s" (String.concat "\n" (List.map Stmt.string_of block.statements)) *)
+
+  let pp expr = 
+    Printf.sprintf "(Function: %s)" (string_of expr)
+  ;;
 
   let eq a b = 
     let is_token_eq = Token.eq a.token b.token in
@@ -407,6 +437,7 @@ and If : sig
   };;
   val string_of : t -> string
   val print : t -> string
+  val pp : t -> string
   val eq : t -> t -> bool
   val init : Token.t -> Expression.t -> BlockStmt.t -> t
   val init_else : Token.t -> Expression.t -> BlockStmt.t -> BlockStmt.t -> t
@@ -419,10 +450,21 @@ end = struct
     alternative : BlockStmt.t option;
   };;
   let print stmt =
-    (* Printf.sprintf "if %s then %s else %s)" (Expression.print stmt.condition) (BlockStmt.string_of stmt.consequence) (BlockStmt.string_of stmt.alternative) *)
-    Printf.sprintf "if %s then %s " (Expression.print stmt.condition) (BlockStmt.string_of stmt.consequence)
+    match stmt.alternative with
+    | Some alternative -> 
+      Printf.sprintf "IfExpr: (if %s then %s else %s)" (Expression.string_of stmt.condition) (BlockStmt.string_of stmt.consequence) (BlockStmt.string_of alternative)
+    | None -> 
+      Printf.sprintf "IfExpr (if %s then %s)" (Expression.string_of stmt.condition) (BlockStmt.string_of stmt.consequence)
   ;;
   let string_of stmt = print stmt;;
+
+  let pp stmt =
+    match stmt.alternative with
+    | Some alternative -> 
+      Printf.sprintf "(IF %s THEN\n %s ELSE\n %s)" (Expression.pp stmt.condition) (BlockStmt.pp stmt.consequence) (BlockStmt.pp alternative)
+    | None -> 
+      Printf.sprintf "(IF condition=%s THEN\nconsequence=%s)" (Expression.pp stmt.condition) (BlockStmt.pp stmt.consequence)
+  ;;
 
   (* let init token condition consequence alternative =  *)
     (* {token; condition; consequence; alternative} *)
@@ -435,13 +477,8 @@ end = struct
   let eq a b = 
     (* SHOULD I REMOVE TOKEN CHECK? *)
     let is_token_eq = Token.eq a.token b.token in
-    Printf.printf "Token is equal:  %b\n" is_token_eq;
     let is_condition_eq = Expression.eq a.condition b.condition in
-    Printf.printf "condition is equal:  %b\n" is_condition_eq;
     let is_consequence_eq = BlockStmt.eq a.consequence b.consequence in
-    Printf.printf "consequence a:  %s\n" (BlockStmt.string_of a.consequence);
-    Printf.printf "consequence b:  %s\n" (BlockStmt.string_of b.consequence);
-    Printf.printf "consequence is equal:  %b\n" is_consequence_eq;
     (* let is_alternative_eq = BlockStmt.eq a.alternative b.alternative in *)
 
     (* is_token_eq && is_condition_eq && is_consequence_eq && is_alternative_eq *)
@@ -458,7 +495,7 @@ and Stmt : sig
   (* val init_integer : Token.t -> t *)
   val eq : t -> t -> bool
   val string_of : t -> string
-  val _print : t -> string
+  val pp : t -> string
 end = struct
   type t = 
       | Let of LetStmt.t
@@ -490,10 +527,10 @@ end = struct
     | Expression stmt -> "Stmt.Expression: " ^ ExpressionStmt.string_of stmt
   ;;
 
-  let _print = function
-    | Let stmt -> LetStmt.string_of stmt
-    | Return stmt -> ReturnStmt.string_of stmt
-    | Expression stmt -> ExpressionStmt.print stmt
+  let pp = function
+    | Let stmt -> LetStmt.pp stmt
+    | Return stmt -> ReturnStmt.pp stmt
+    | Expression stmt -> ExpressionStmt.pp stmt
   ;;
 
   let eq (a : t) (b : t) : bool = 
@@ -501,7 +538,7 @@ end = struct
     | (Let a, Let b) -> LetStmt.eq a b
     | (Return a, Return b) -> ReturnStmt.eq a b
     | (Expression a, Expression b) -> ExpressionStmt.eq a b
-    | (a, b) -> ("Cannot compare statements\n" ^ string_of a ^ "\n" ^ (string_of b) |> failwith)
+    | (a, b) -> ("Cannot compare statements a=" ^ string_of a ^ "\nb=" ^ (string_of b) |> failwith)
 
 
   (* let print stmt =  *)
@@ -518,6 +555,7 @@ and ExpressionStmt : sig
   val eq : t -> t -> bool
   val string_of : t -> string
   val print : t -> string
+  val pp : t -> string
 
 end = struct
   type t = {
@@ -540,6 +578,11 @@ end = struct
   let string_of (stmt : t) = 
     Printf.sprintf "ExpressionStmt: {(%s) (%s)}" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
   ;;
+
+  let pp (stmt : t) = 
+    Printf.sprintf "%s" (Expression.pp stmt.expr)
+  ;;
+
   let print (stmt : t) = 
     Printf.sprintf "%s" (Expression.print stmt.expr)
   ;;
@@ -554,6 +597,7 @@ and LetStmt : sig
   val init : Token.t -> Identifier.t -> Expression.t -> t
   val eq : t -> t -> bool
   val string_of : t -> string
+  val pp : t -> string
 
 end = struct
   type t = {
@@ -569,6 +613,10 @@ end = struct
 
   let string_of (stmt : t) = 
     Printf.sprintf "%s %s = %s;" stmt.token.literal stmt.id.token.literal (Expression.string_of stmt.value)
+  ;;
+
+  let pp (stmt : t) = 
+    Printf.sprintf "LET %s %s = %s;" stmt.token.literal stmt.id.token.literal (Expression.pp stmt.value)
   ;;
 
   let eq (a : t) (b : t) = 
@@ -590,6 +638,7 @@ and ReturnStmt : sig
   val init : Token.t -> Expression.t -> t
   val eq : t -> t -> bool
   val string_of : t -> string
+  val pp : t -> string
 
 end = struct
   type t = {
@@ -598,10 +647,6 @@ end = struct
     (* value : expr; *)
   }
     [@@deriving show];;
-
-  (* let token_literal = "return";; *)
-  (* let t_type = Token.Return;; *)
-  (* let tok: Token.t = {t_type = t_type; literal = token_literal};; *)
 
   let init token expr = 
     {token; expr}
@@ -617,27 +662,29 @@ end = struct
   let string_of stmt = 
       Printf.sprintf "ReturnStmt: {Token: (%s) value: (%s)" (Token.string_of stmt.token) (Expression.string_of stmt.expr)
 
+  let pp (stmt : t) = 
+    Printf.sprintf "return %s;" (Expression.pp stmt.expr)
+  ;;
+
 end
 and BlockStmt : sig
   type t = {
-    token: Token.t;
     statements: Stmt.t list;
   }
   [@@deriving show]
-  val init : Token.t -> Stmt.t list -> t
-  (* (* val init_integer : Token.t -> t *) *)
+  val init : Stmt.t list -> t
   val eq : t -> t -> bool
   val string_of : t -> string
-  (* val _print : t -> string *)
+  val pp : t -> string
+  val string_of_statements : Stmt.t list -> string
 
 end = struct
   type t = {
-    token: Token.t;
     statements: Stmt.t list;
   }
 
-  let init token statements = 
-    { token; statements; } 
+  let init statements = 
+    { statements; } 
   ;;
   let rec block_eq a b = 
     match (a, b) with
@@ -652,17 +699,20 @@ end = struct
     match stmts with
     | [] -> ""
     | stmt::stmts -> 
-      (Stmt.string_of stmt) ^ "\n" ^ (string_of_statements stmts)
+      (Stmt.pp stmt) ^ "\n" ^ (string_of_statements stmts)
 
   let string_of (block : t) = 
-    Printf.sprintf "BlockStmt: {Token: (%s) statements: (%s)" (Token.string_of block.token) (string_of_statements block.statements)
+    Printf.sprintf "BlockStmt: {statements: (%s)" (string_of_statements block.statements)
+
+  let pp (block : t) = 
+    Printf.sprintf "(Block: %s)" (String.concat "\n" (List.map Stmt.pp block.statements))
+  
   
 
   let eq a b = 
     match (a, b) with
-    | ({token = a_token; statements = a_statements}, {token = b_token; statements = b_statements}) -> 
-    let token_is_equal = (Token.eq a_token b_token) in
-      (token_is_equal) && (block_eq  a_statements b_statements)
+    | ({statements = a_statements}, {statements = b_statements}) -> 
+     block_eq  a_statements b_statements
 end
 
 type program = Stmt.t list
@@ -678,24 +728,32 @@ module Node = struct
   let of_stmt stmt = Statement stmt;;
   let of_program prog = Program prog;;
   let of_expression expr = Expression expr;;
+
   let string_of = function 
-  | Program prog -> Printf.sprintf "Program: %s" (String.concat "\n" (List.map Stmt.string_of prog))
+  | Program prog -> Printf.sprintf "Program: \n-------------------------------------------------\n%s\n-------------------------------------------------\n" (String.concat "\n" (List.map Stmt.string_of prog))
   | Statement stmt -> Printf.sprintf "Statement: %s" (Stmt.string_of stmt)
   | BlockStatement block -> Printf.sprintf "Block: %s" (String.concat "\n" (List.map Stmt.string_of block.statements))
   | Expression expr -> Printf.sprintf "Expression: %s" (Expression.string_of expr)
+  ;;
+
+  let pp = function 
+  | Program prog -> "(Program: " ^ String.concat "\n" (List.map Stmt.pp prog) ^ ")"
+  | Statement stmt -> Stmt.pp stmt
+  | BlockStatement block -> String.concat "\n" (List.map Stmt.pp block.statements)
+  | Expression expr -> Expression.pp expr
 
 end
 
 let rec print_program = function 
   | [] -> print_endline "PrintProgram EOF\n"
   | hd :: tl -> 
-    let stmt = Stmt._print hd in
+    let stmt = Stmt.pp hd in
     let () = print_endline ("PrintProgram Stmt: " ^ stmt) in
     print_program tl
 
 let rec show_program = function 
   | [] -> print_endline "PrintProgram EOF\n"
   | hd :: tl -> 
-    let stmt = Node.string_of hd in
+    let stmt = Node.pp hd in
     let () = print_endline ("PrintProgram Stmt: " ^ stmt) in
     show_program tl

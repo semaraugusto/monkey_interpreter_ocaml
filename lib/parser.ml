@@ -113,7 +113,6 @@ module Parser = struct
 
   let rec parse_expr (parser : t) (precedence: Token.precedence) = 
     let* (parser, left) = prefix parser in
-    Printf.printf "parse_expr : %s left: %s\n" (Token.string_of parser.cur_token) (Expression.print left);
 
     infix_loop parser precedence left
 
@@ -180,7 +179,6 @@ module Parser = struct
     match (not (peek_token_is parser Token.Semicolon)) &&  (precedence < peek_precedence parser) with 
       true -> (
         let parser = next_token parser in
-        Printf.printf "infix-loop TRUE cur_token: %s left: %s\n" (Token.string_of parser.cur_token) (Expression.print left);
         let* (parser, left) = infix parser left in
         let* (parser, left) = infix_loop parser precedence left in 
         Ok (parser, left)
@@ -203,15 +201,14 @@ module Parser = struct
     let expr = Ast.Expression.init_prefix prefix_token right in
     Ok (parser, expr)
   and
-  (* parse_block_stmt parser : BlockStmt.t =  *)
-  parse_block_loop parser (token : Token.t) (statements : Stmt.t list) = 
+  parse_block_loop parser token statements = 
     match (not (cur_token_is parser Token.RBrace) && (not (cur_token_is parser Token.EOF))) with 
       true ->
         let* (parser, stmt) = parse_stmt parser in 
         let parser = next_token parser in
         parse_block_loop parser token (stmt :: statements)
       |false -> 
-        let block = BlockStmt.init token statements in
+        let block = BlockStmt.init (List.rev statements) in
         Ok (parser, block)
   and
   parse_block_stmt parser = 
@@ -219,6 +216,7 @@ module Parser = struct
     let token = parser.cur_token in
 
     let* (parser, block) = parse_block_loop parser token [] in
+
 
     Ok (parser, block)
   and
@@ -238,28 +236,28 @@ module Parser = struct
     Ok (parser, expr)
   and
   parse_if_expr parser = 
-    let _if_token = parser.cur_token in
+    let if_token = parser.cur_token in
     let parser = next_token parser in
     let* (parser, condition) = parse_expr parser Token.LOWEST in
     let parser = next_token_if parser Token.LBrace in
     let* (parser, consequence) = parse_block_stmt parser in
+
     match peek_token_is parser Token.Else with 
       false ->
-        let expr = Expression.init_if _if_token condition consequence in
+        let expr = Expression.init_if if_token condition consequence in
         Ok (parser, expr)
     | true -> 
         let parser = next_token parser in
         let parser = next_token_if parser Token.LBrace in
         let* (parser, alternative) = parse_block_stmt parser in
       
-        let expr = Expression.init_if_else _if_token condition consequence alternative in
+        let expr = Expression.init_if_else if_token condition consequence alternative in
         Ok (parser, expr)
   and
   parse_expr_stmt (parser : t) = 
     let cur_token = parser.cur_token in
 
     let* (parser, expr) = parse_expr parser Token.LOWEST in
-    Printf.printf "parse_expr_stmt : %s expr: %s\n" (Token.string_of cur_token) (Expression.print expr);
 
     let stmt = Ast.Stmt.Expression (Ast.ExpressionStmt.init cur_token expr) in
 
@@ -288,7 +286,6 @@ module Parser = struct
     let precedence = cur_precedence parser in
     let parser = next_token parser in
     let* (parser, right) = parse_expr parser precedence in
-    Printf.printf "infix_token : %s left: %s right: %s\n" (Token.string_of infix_token) (Expression.print left) (Expression.print right);
     let expr = Ast.Expression.init_infix infix_token left right in
 
     Ok (parser, expr)
@@ -329,11 +326,12 @@ module Parser = struct
 
   let rec parse_program parser program = 
     let cur = parser.cur_token.t_type in 
-    let peek = parser.peek_token.t_type in 
-    match (cur, peek) with
-    | (Token.EOF, _) -> Ok (List.rev program)
-    | (_, _) -> 
+    (* let peek = parser.peek_token.t_type in  *)
+    match cur with
+    | Token.EOF -> Ok (List.rev program)
+    | _ -> 
         let* (parser, stmt) = parse_stmt parser in
+        
         let program = stmt :: program in
         let parser = next_token parser in
         parse_program parser program

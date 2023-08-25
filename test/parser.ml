@@ -483,11 +483,49 @@ let expected_if_stmt: program = [
           (Expression.init (Token.init Token.Ident "x"))
           (Expression.init (Token.init Token.Ident "y")))
         (BlockStmt.init 
-          (Token.init Token.Ident "x")
           ([Stmt.Expression {
             token = Token.init Token.Ident "x";
             expr = Expression.init (Token.init Token.Ident "x");
           };])))
+  };
+];;
+
+let expected_complex_if_stmt: program = [
+  Stmt.Expression {
+    token = Token.init Token.If "if";
+    expr = 
+      (Expression.init_if 
+        (Token.init Token.If "if")
+        (Expression.init_infix 
+          (Token.init Token.GT ">")
+          (Expression.init (Token.init Token.Int "10"))
+          (Expression.init (Token.init Token.Int "1")))
+        (BlockStmt.init 
+          ([
+            Stmt.Expression {
+              token = Token.init Token.If "if";
+              expr = (
+                Expression.init_if 
+                (Token.init Token.If "if")
+                (Expression.init_infix 
+                  (Token.init Token.GT ">")
+                  (Expression.init (Token.init Token.Int "10"))
+                  (Expression.init (Token.init Token.Int "2")))
+                (BlockStmt.init 
+                  ([
+                    Stmt.Return {
+                      token = Token.init Token.Return "return";
+                      expr = Expression.init (Token.init Token.Int "10");
+                    };
+                  ])
+                )
+              )
+            };
+            Stmt.Return {
+              token = Token.init Token.Return "return";
+              expr = Expression.init (Token.init Token.Int "1");
+            };
+          ])))
   };
 ];;
 let expected_else_stmt: program = [
@@ -501,13 +539,11 @@ let expected_else_stmt: program = [
           (Expression.init (Token.init Token.Ident "x"))
           (Expression.init (Token.init Token.Ident "y")))
         (BlockStmt.init 
-          (Token.init Token.Ident "x")
           ([Stmt.Expression {
             token = Token.init Token.Ident "x";
             expr = Expression.init (Token.init Token.Ident "x");
           };]))
         (BlockStmt.init 
-          (Token.init Token.Ident "y")
           ([Stmt.Expression {
             token = Token.init Token.Ident "y";
             expr = Expression.init (Token.init Token.Ident "y");
@@ -526,7 +562,6 @@ let expected_fn_stmt: program = [
           Identifier.of_token (Token.init Token.Ident "y");
         ])
         (BlockStmt.init 
-          (Token.init Token.Ident "x")
           ([
             Stmt.Expression {
             token = Token.init Token.Ident "x";
@@ -713,6 +748,22 @@ let _test_else_stmt () =
   Alcotest.(check bool) "is_equal" true is_equal;;
 ;;
 
+let _test_complex_if_stmt () = 
+  let code = "if (10 > 1) {
+  if (10 > 2) {
+    return 10;
+  }
+
+  return 1;
+}"
+ in 
+  let parser = Monkey.Parser.init code in 
+  let* program = Monkey.Parser.parse_program parser [] in 
+  Printf.printf "---------------------------------\n(%s)---------------------------------\n" (BlockStmt.string_of_statements program);
+  let is_equal = cmp program expected_complex_if_stmt in
+  Alcotest.(check bool) "is_equal" true is_equal;;
+;;
+
 let _test_fn_stmt () = 
   let code = "fn(x, y) { x + y }" in 
   let parser = Monkey.Parser.init code in 
@@ -755,6 +806,7 @@ let () =
       Alcotest.test_case "precedence_expr" `Quick _test_precedence_expr_parser;
       Alcotest.test_case "plus_expr" `Quick _test_boolean_expr_parser;
       Alcotest.test_case "if" `Quick _test_if_stmt;
+      Alcotest.test_case "complex_if" `Quick _test_complex_if_stmt;
       Alcotest.test_case "else" `Quick _test_else_stmt;
       Alcotest.test_case "function" `Quick _test_fn_stmt;
       Alcotest.test_case "call" `Quick _test_call_stmt;
