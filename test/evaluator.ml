@@ -1,12 +1,7 @@
 open Monkey
 
-(* let ( let* ) x f = match x with *)
-(*   | Ok x -> f x *)
-(*   | Error err -> failwith (EvaluationError.string_of err) *)
-(* ;; *)
 let ( let* ) x f = match x with
   | Ok x -> f x
-  (* | Error err -> failwith (ParseError.string_of err) *)
   | Error err -> Monkey.failwith_error err
 
 let test_int_eval () = 
@@ -77,6 +72,27 @@ let check_eval src expected =
   let is_equal = Object.eq program expected in
   Alcotest.(check bool) "is_equal" true is_equal
 
+let check_errors src expected =
+  let program = Monkey.eval_program src in 
+  match (program, expected) with 
+  | Ok prog, _ -> 
+    failwith ("expected error but got program:\n" ^ (Object.string_of prog))
+  | Error actual, expected -> 
+    let is_eq = Monkey.eq actual expected in
+    let _ = (match is_eq with
+    | true -> ()
+    | false -> (
+        print_endline ("ACTUAL: " ^ (Monkey.string_of actual)); 
+        print_endline ("EXPECTED: " ^ (Monkey.string_of expected)))
+    ) in
+      
+    Alcotest.(check bool) "is_equal" is_eq true
+  (* | _, _ -> failwith "wtf dude" *)
+(* print_endline ("ACTUAL: " ^ (Monkey.Object.string_of program)); *)
+  (* print_endline ("EXPECTED: " ^ (Monkey.Object.string_of expected)); *)
+  (* let is_equal = Object.eq program expected in *)
+  (* Alcotest.(check bool) "is_equal" true is_equal *)
+
 let test_conditional_eval () = 
   let code = [ 
     "if (true) { 10 }";
@@ -125,12 +141,42 @@ let _test_return_eval () =
   do_all check_eval code expected;
 ;;
 
+let _test_error_handling () = 
+  let code = [ 
+    "5 + true";
+    "5 + true; 5;";
+    "-true";
+    "true + false";
+    "5; true + false; 5";
+    "if (10 > 1) { true + false; }";
+    "if (10 > 1) {
+  if (10 > 1) {
+    return true + false;
+  }
+
+  return 1;
+}";
+  ] in 
+  let expected = [
+      (`TypeMismatch "INTEGER + BOOLEAN");
+      (`TypeMismatch "INTEGER + BOOLEAN");
+      (`UnknownOperator "-BOOLEAN");
+      (`UnknownOperator "BOOLEAN + BOOLEAN");
+      (`UnknownOperator "BOOLEAN + BOOLEAN");
+      (`UnknownOperator "BOOLEAN + BOOLEAN");
+      (`UnknownOperator "BOOLEAN + BOOLEAN");
+  ] in
+
+  do_all check_errors code expected;
+;;
+
 let () =
   Alcotest.run "Parsing" [
     "primitive eval", [ 
       Alcotest.test_case "int" `Quick test_int_eval;
       Alcotest.test_case "bool" `Quick test_bool_eval;
       Alcotest.test_case "conditional" `Quick test_conditional_eval;
+      Alcotest.test_case "errors" `Quick _test_error_handling;
       Alcotest.test_case "return" `Quick _test_return_eval;
     ];
   ]

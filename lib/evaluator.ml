@@ -8,6 +8,9 @@ include Parser;;
 type error = [
   | `CannotEvaluate of string
   | `PrefixEvaluationError of string
+  | `UnknownOperator of string
+  | `TypeError of string
+  | `TypeMismatch of string
   | `InfixEvaluationError of string
   | `Failed of string
 ];;
@@ -17,15 +20,23 @@ module Object = struct
   | Integer of int
   | Boolean of bool
   | Return of t
+  (* | Err of error *)
   | Null
-
-  let compare = String.compare;;
 
   let rec string_of = function 
     | Integer i -> string_of_int i
     | Boolean b -> string_of_bool b
     | Return ret -> ("ObjectReturn: " ^ (string_of ret))
+    (* | Err err -> Error.string_of err *)
     | Null -> "null"
+  ;;
+
+  let type_of = function 
+    | Integer _ -> "INTEGER"
+    | Boolean _ -> "BOOLEAN"
+    | Return _ -> "RETURN"
+    (* | Err _ -> "ERROR!" *)
+    | Null -> "NULL"
   ;;
 
   let inspect x = string_of x;;
@@ -52,7 +63,8 @@ let eval_integer_infix_expr left operator right =
     | ">" -> Ok (Object.Boolean (left > right))
     | "==" -> Ok (Object.Boolean (left == right))
     | "!=" -> Ok (Object.Boolean (left != right))
-    | _ -> Ok (Object.Null)
+    | _ -> Error (`UnknownOperator (Printf.sprintf "INTEGER %s
+     INTEGER" operator))
 ;;
 let eval_boolean_infix_expr left operator right = 
   match operator with 
@@ -60,19 +72,21 @@ let eval_boolean_infix_expr left operator right =
     | ">" -> Ok (Object.Boolean (left > right))
     | "==" -> Ok (Object.Boolean (left == right))
     | "!=" -> Ok (Object.Boolean (left != right))
-    | _ -> Ok (Object.Null)
+    | _ -> Error (`UnknownOperator ("BOOLEAN " ^ operator ^ " BOOLEAN"))
+    (* | op -> Ok (Object.Null) *)
 ;;
 
-let eval_bang_expr = function 
+let eval_bang_expr obj = match obj with  
   | Object.Boolean true -> Ok (Object.Boolean false)
   | Object.Boolean false -> Ok (Object.Boolean true)
   | Object.Null -> Ok (Object.Boolean true)
-  | _ -> Ok (Object.Boolean false)
+  | _ -> Error (`UnknownOperator (Printf.sprintf "!%s" (Object.type_of obj)))
+  (* | _ -> Ok (Object.Boolean false) *)
 ;;
 
-let eval_minus_expr = function 
+let eval_minus_expr obj = match obj with 
   | Object.Integer x -> Ok (Object.Integer (-x))
-  | _ -> Error (`CannotEvaluate "cannot minus non integer value")
+  | _ -> Error (`UnknownOperator (Printf.sprintf "-%s" (Object.type_of obj)))
 ;;
 
 let is_truthy = function
@@ -82,19 +96,13 @@ let is_truthy = function
 
 let rec eval (node : Node.t) = 
   match node with 
-    | Ast.Node.Program p -> eval_statements p
+    | Ast.Node.Program p -> eval_program p
     | Ast.Node.Statement stmt -> eval_statement stmt
     | Ast.Node.BlockStatement block -> eval_block_statement block
     | Ast.Node.Expression expr -> eval_expr expr
-    (* | _ -> Error (EvaluationError.Failed "here not implemented") *)
-    (* | Ast.Node.Expression e -> eval_expression e *)
-    (* | Ast.Node.Statement s -> eval_statement s *)
-
 and
 eval_block_statement block =
   let rec eval_loop statements return = 
-    (* print_endline ("eval_block_statement iteration: " ^ (string_of_int return)); *)
-    (* print_endline ("statements: " ^ (Ast.BlockStmt.string_of_statements statements)); *)
     match statements with
       | [] -> Ok (Object.Null)
       | x::[] -> eval (Ast.Node.of_stmt x)
@@ -107,23 +115,16 @@ eval_block_statement block =
   eval_loop block.statements 0
 
 and 
-eval_statements (statements : Ast.Stmt.t list) = 
+eval_program (statements : Ast.Stmt.t list) = 
   let rec eval_loop (statements : Ast.Stmt.t list) result = 
     match statements with
       | [] -> Ok result
       | x::[] -> (
-        (* print_endline "Eval last statement"; *)
-        (* print_endline ("eval_statement: " ^ (Ast.Stmt.string_of x)); *)
-        
         match result with 
           | Object.Return _ -> Ok result
           | _ -> eval (Ast.Node.of_stmt x)
       )
-        (* let* result = eval (Ast.Node.of_stmt x) *)
-        
       | x::xs -> 
-        (* print_endline "Eval statementss"; *)
-        (* print_endline ("eval_statement: " ^ (Ast.Stmt.string_of x)); *)
         let* result = eval (Ast.Node.of_stmt x) in 
         match result with 
           | Object.Return _result -> Ok (Object.Return _result)
@@ -170,13 +171,13 @@ eval_prefix_expr operator right =
   match operator with 
   | "!" -> eval_bang_expr right
   | "-" -> eval_minus_expr right
-  | _ -> Error (`PrefixEvaluationError "not implemented for this type of statement")
+  | _ -> Error (`UnknownOperator (operator ^ (Object.string_of right)))
 and
 eval_infix_expr left operator right = 
   match (left, right) with 
   | (Object.Integer left, Object.Integer right) -> eval_integer_infix_expr left operator right
   | (Object.Boolean left, Object.Boolean right) -> eval_boolean_infix_expr left operator right
-  | _ -> Error (`InfixEvaluationError "eval_infix_expr not implemented for this type of statement")
+  | (left, right) -> Error (`TypeMismatch (Printf.sprintf "%s %s %s" (Object.type_of left) operator (Object.type_of right)))
 ;;
 
 let eval_program code = 
