@@ -169,6 +169,26 @@ let _test_error_handling () =
 
   do_all check_errors code expected;
 ;;
+let _test_let_statement_eval () = 
+  let code = [ 
+    "let a = 5; a;";
+  ] in
+  let expected = [
+    Object.Integer 5;
+  ] in
+  do_all check_eval code expected
+;;
+
+let _test_identifier_not_found () = 
+  let code = [ 
+    "foobar";
+  ] in
+  let expected = [
+    (`IdentifierNotFound "foobar");
+  ] in
+  do_all check_errors code expected
+;;
+
 
 let () =
   Alcotest.run "Parsing" [
@@ -176,6 +196,7 @@ let () =
       Alcotest.test_case "int" `Quick test_int_eval;
       Alcotest.test_case "bool" `Quick test_bool_eval;
       Alcotest.test_case "conditional" `Quick test_conditional_eval;
+      Alcotest.test_case "let" `Quick _test_let_statement_eval;
       Alcotest.test_case "errors" `Quick _test_error_handling;
       Alcotest.test_case "return" `Quick _test_return_eval;
     ];

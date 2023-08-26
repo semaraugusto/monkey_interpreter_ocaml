@@ -13,6 +13,7 @@ let string_of error =
   | (`UnknownOperator expr) -> Printf.sprintf "Error: UnknownOperator : %s\n" expr
   | (`TypeError expr) -> Printf.sprintf "Error: TypeError: %s\n" expr
   | (`TypeMismatch expr) -> Printf.sprintf "Error: TypeMismatch: %s\n" expr
+  | (`IdentifierNotFound expr) -> Printf.sprintf "Error: IdentifierNotFound: %s\n" expr
 
 let handle_error error =
   Printf.eprintf "%s" (string_of error)
