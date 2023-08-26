@@ -1,9 +1,13 @@
-module Object = struct
+module Object = struct 
   type t = 
   | Integer of int
   | Boolean of bool
   | Return of t
-  (* | Err of error *)
+  | Function of {
+      params: Ast.Identifier.t list;
+      (* body: Ast.Stmt.t list; *)
+      body: Ast.BlockStmt.t;
+    }
   | Null
 
   let rec string_of = function 
@@ -11,6 +15,7 @@ module Object = struct
     | Boolean b -> string_of_bool b
     | Return ret -> ("ObjectReturn: " ^ (string_of ret))
     | Null -> "null"
+    | _ -> ("FUNCTION: ")
   ;;
 
   let type_of = function 
@@ -18,6 +23,7 @@ module Object = struct
     | Boolean _ -> "BOOLEAN"
     | Return _ -> "RETURN"
     | Null -> "NULL"
+    | _ -> "FUNCTION"
   ;;
 
   let inspect x = string_of x;;
@@ -31,11 +37,13 @@ module Object = struct
     | _ -> false
   ;;
 end
+(* open Object *)
 
 module Environment = struct 
   type t = (string, Object.t) Hashtbl.t
+  (* type t = (string, Object.t) Hashtbl.t *)
 
-  let new_env () = Hashtbl.create 1000;;
+  let new_env () = Hashtbl.create 1;;
 
   let get env key = Hashtbl.find_opt env key;;
 

@@ -123,6 +123,9 @@ eval_expr expr env = match expr with
         | Some alternative -> eval (Node.BlockStatement alternative) env
         | None -> Ok (Object.Null)
     end
+  | Ast.Expression.Function { token=_; parameters; body; } -> 
+      Ok (Object.Function { params=parameters; body; })
+
 
   | _ -> Error (`CannotEvaluate "eval_expr not implemented for this type of expression")
 

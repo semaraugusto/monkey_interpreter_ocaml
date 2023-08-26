@@ -172,9 +172,15 @@ let _test_error_handling () =
 let _test_let_statement_eval () = 
   let code = [ 
     "let a = 5; a;";
+    "let a = 5 * 5; a;";
+    "let a = 5; let b = a; b;";
+    "let a = 5; let b = a; let c = a + b + 5; c;";
   ] in
   let expected = [
     Object.Integer 5;
+    Object.Integer 25;
+    Object.Integer 5;
+    Object.Integer 15;
   ] in
   do_all check_eval code expected
 ;;
@@ -191,7 +197,7 @@ let _test_identifier_not_found () =
 
 
 let () =
-  Alcotest.run "Parsing" [
+  Alcotest.run "Evaluating" [
     "primitive eval", [ 
       Alcotest.test_case "int" `Quick test_int_eval;
       Alcotest.test_case "bool" `Quick test_bool_eval;

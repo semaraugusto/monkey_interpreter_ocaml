@@ -2,10 +2,9 @@ include Token
 include Lex
 include Ast
 include Parser
-(* include Object *)
+include Object
 include Evaluator
 include Error
-let test str = print_endline str
 
 (* module Token = struct *)
 (*   type token_type =  *)
